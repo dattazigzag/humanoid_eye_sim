@@ -61,13 +61,13 @@ void showWiFiConnected() {
 // WiFi& Artnet stuff
 const char *ssid = ":)";
 const char *pwd = "jEmx4vpR";
-const IPAddress ip(192, 168, 1, 201);
+const IPAddress ip(192, 168, 1, 202);
 const IPAddress gateway(192, 168, 1, 1);
 const IPAddress subnet_mask(255, 255, 255, 0);
 
 ArtnetWiFiReceiver artnet;
 
-uint16_t universe0 = 0;  // 0 - 32767
+uint16_t universe0 = 1;  // 0 - 32767
 uint8_t net = 0;         // 0 - 127
 uint8_t subnet = 0;      // 0 - 15
 
