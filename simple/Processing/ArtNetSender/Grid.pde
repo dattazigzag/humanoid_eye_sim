@@ -19,6 +19,7 @@ class Grid {
     this.canvas = canvas;
     this.cellWidth = canvas.width / cols;
     this.cellHeight = canvas.height / rows;
+    println("Grid initialized with cell size: " + cellWidth + "x" + cellHeight + " for canvas width: " + canvas.width);
   }
 
   boolean isEnabled() {
@@ -27,24 +28,19 @@ class Grid {
 
   void toggleGrid() {
     enabled = !enabled;
-    println("Grid: " + (enabled ? "Enabled" : "Disabled"));
+    log("Grid: " + (enabled ? "Enabled" : "Disabled"));
   }
 
   void cyclePixelationAlgorithm() {
     currentAlgorithm = (currentAlgorithm + 1) % 4;  // Cycle through the 4 algorithms
-    println("Pixelation Algorithm: " + algorithmNames[currentAlgorithm]);
+    log("Pixelation Algorithm: " + algorithmNames[currentAlgorithm]);
   }
 
-  void drawPixelatedGrid(PImage img) {
+  void drawPixelatedGrid(PImage img, int side) {
     img.loadPixels();
 
-    // Create an array for our DMX data (64 RGB values = 192 channels)
-    // byte[] dmxData = new byte[cols * rows * 3];  // RGB values for each cell
-
-    // Create a full DMX universe array (always 512 channels for DMX512 standard)
-    byte[] dmxData = new byte[512];  // Initialize all channels to 0
-
     // Calculate color for each cell in the grid using the current algorithm
+    // But don't send DMX data here, just return color values to be combined later
     for (int y = 0; y < rows; y++) {
       for (int x = 0; x < cols; x++) {
         int startX = x * cellWidth + canvas.x;
@@ -79,47 +75,25 @@ class Grid {
         noFill();
         rect(startX, startY, cellWidth, cellHeight);
 
-        // Determine the DMX channel for this cell based on the provided mapping
-        // Mapping style: 1
-        // From bottom-left (0) to top-right (63) as shown in the mapping
-        /*
-         63 62 61 60 59 58 57 56
-         55 54 53 52 51 50 49 48
-         47 46 45 44 43 42 41 40
-         39 38 37 36 35 34 33 32
-         31 30 29 28 27 26 25 24
-         23 22 21 20 19 18 17 16
-         15 14 13 12 11 10  9  8
-         7  6  5  4  3  2  1  0
-         */
-        //int cellIndex = ((7-y) * 8) + x;  // Convert from our grid coords to specified mapping
-
-        // Mapping Style: 2
-        // From top-left (0) to bottom-right (63)
-        /*
-         0  1  2  3  4  5  6  7
-         8  9 10 11 12 13 14 15
-         16 17 18 19 20 21 22 23
-         24 25 26 27 28 29 30 31
-         32 33 34 35 36 37 38 39
-         40 41 42 43 44 45 46 47
-         48 49 50 51 52 53 54 55
-         56 57 58 59 60 61 62 63
-         */
-        int cellIndex = y * 8 + x;  // Standard left-to-right, top-to-bottom grid
+        // Standard left-to-right, top-to-bottom grid mapping
+        int cellIndex = y * 8 + x;
 
         // Store RGB values in DMX data array (3 channels per cell)
-        // We'll use the first 192 channels of the 512 DMX channels
-        int dmxIndex = cellIndex * 3;
-        dmxData[dmxIndex] = (byte) (int) red(cellColor);        // R
-        dmxData[dmxIndex + 1] = (byte) (int) green(cellColor);  // G
-        dmxData[dmxIndex + 2] = (byte) (int) blue(cellColor);   // B
-      }
-    }
+        int dmxIndex;
+        if (side == 0) {  // Left side
+          dmxIndex = cellIndex * 3;
+        } else {  // Right side
+          dmxIndex = 192 + (cellIndex * 3);  // Start at channel 192 for right side
+        }
 
-    // Send the DMX data if enabled
-    if (enableDMX && dmxSender != null) {
-      dmxSender.sendDMXData(dmxData);
+        // Only update if within our range
+        if (dmxIndex < 384) {  // 384 = 128 cells * 3 channels
+          // Store in the global DMX array instead of sending immediately
+          dmxData[dmxIndex] = (byte) (int) red(cellColor);        // R
+          dmxData[dmxIndex + 1] = (byte) (int) green(cellColor);  // G
+          dmxData[dmxIndex + 2] = (byte) (int) blue(cellColor);   // B
+        }
+      }
     }
   }
 
