@@ -1,11 +1,5 @@
-// ToDo
-// 1. Fix the DropDown selector on top always.
-// 2. Save config of IP and boardcast 
-// 3. Enlarge the window
-// 4. Add console
-
 // Libraries for file dropping and video processing
-import drop.*;
+//import drop.*;
 import processing.video.*;
 // Art-Net library
 import ch.bildspur.artnet.*;
@@ -16,20 +10,21 @@ import controlP5.*;
 
 
 // Main sketch dimensions
-final int SKETCH_WIDTH = 320;
-final int SKETCH_HEIGHT = 320;
+final int SKETCH_WIDTH = 640;
+final int SKETCH_HEIGHT = 550;
 final int CANVAS_WIDTH = 320;
 final int CANVAS_HEIGHT = 320;
+final int RESERVED_HEIGHT = 230;
 
 
 // Main Objects / Classes / Components
 Canvas mainCanvas;
 MediaHandler mediaHandler;
 Grid grid;
-SDrop drop;
+//SDrop drop;
 DMXSender dmxSender;
-//UserInterface ui;
-ControlFrame controlFrame;
+UserInterface ui;
+
 
 // DMX Configuration - Can be adjusted easily here
 boolean enableDMX = false;
@@ -41,7 +36,7 @@ int subnet = 0;  // DMX Subnet
 
 
 void setup() {
-  size(320, 320);
+  size(640, 550);
   background(0);
 
   frameRate(20);
@@ -55,7 +50,7 @@ void setup() {
   mediaHandler = new MediaHandler(this, mainCanvas);
 
   // Setup drop functionality
-  drop = new SDrop(this);
+  //drop = new SDrop(this);
 
   // Initialize DMX Sender
   if (enableDMX) {
@@ -64,8 +59,7 @@ void setup() {
   }
 
   // Initialize UI
-  controlFrame = new ControlFrame(this, 320, 230, "Controller");
-  surface.setLocation(10+320, 10); // Position main window
+  ui = new UserInterface(this, 0, CANVAS_HEIGHT, SKETCH_WIDTH, RESERVED_HEIGHT);
 }
 
 void draw() {
@@ -86,6 +80,14 @@ void draw() {
     }
   }
 
+  // Draw a dividing line for the reserved area
+  stroke(50);
+  line(0, mainCanvas.height, mainCanvas.width, mainCanvas.height);
+  noStroke();
+
+  // Render UI
+  ui.render();
+
   // Check for video updates
   mediaHandler.update();
 }
@@ -95,6 +97,8 @@ void draw() {
 void keyPressed() {
   if (key == 'g' || key == 'G') {
     grid.toggleGrid();
+    // Update the UI toggle to match the grid state
+    ui.gridToggle.setValue(grid.isEnabled());
   } else if (key == 'p' || key == 'P') {
     grid.cyclePixelationAlgorithm();
   } else if (key == 'd' || key == 'D') {
@@ -109,18 +113,11 @@ void keyPressed() {
   }
 }
 
-void dropEvent(DropEvent event) {
-  if (event.isFile()) {
-    mediaHandler.loadMedia(event.filePath());
-  }
-}
-
-//File selection callback
-void fileSelected(File selection) {
-  if (selection != null) {
-    mediaHandler.loadMedia(selection.getAbsolutePath());
-  }
-}
+//void dropEvent(DropEvent event) {
+//  if (event.isFile()) {
+//    mediaHandler.loadMedia(event.filePath());
+//  }
+//}
 
 // Override exit to perform cleanup before closing
 void exit() {
