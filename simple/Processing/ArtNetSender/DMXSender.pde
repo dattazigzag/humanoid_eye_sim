@@ -22,15 +22,15 @@ class DMXSender {
     try {
       if (useBroadcast) {
         artnet.start();
-        println("ArtNet started in broadcast mode");
+        log("ArtNet started in broadcast mode");
       } else {
         InetAddress address = InetAddress.getByName(targetIP);
         artnet.start(address);
-        println("ArtNet started to target IP: " + targetIP);
+        log("ArtNet started to target IP: " + targetIP);
       }
     }
     catch (Exception e) {
-      println("Error connecting to ArtNet: " + e.getMessage());
+      log("Error connecting to ArtNet: " + e.getMessage());
     }
   }
 
@@ -41,7 +41,7 @@ class DMXSender {
         artnet.unicastDmx(targetIP, subnet, universe, data);
       }
       catch (Exception e) {
-        println("Error sending DMX data: " + e.getMessage());
+        log("Error sending DMX data: " + e.getMessage());
       }
     }
   }
@@ -49,7 +49,7 @@ class DMXSender {
   void stop() {
     if (artnet != null) {
       artnet.stop();
-      println("ArtNet stopped");
+      log("ArtNet stopped");
     }
   }
 }

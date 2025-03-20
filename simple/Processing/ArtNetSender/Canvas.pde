@@ -8,6 +8,7 @@ class Canvas {
     this.y = y;
     this.width = width;
     this.height = height;
+    println("Created canvas at (" + x + "," + y + ") with size " + width + "x" + height);
   }
 
   void render() {

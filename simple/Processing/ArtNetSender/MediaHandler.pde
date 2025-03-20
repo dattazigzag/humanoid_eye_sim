@@ -55,7 +55,7 @@ class MediaHandler {
       fileExt.equals(".avi") || fileExt.equals(".webm")) {
       loadVideoFile(filePath);
     } else {
-      println("Unsupported file format. Please drop an image or video file.");
+      log("Unsupported file format. Please drop an image or video file.");
     }
   }
 
@@ -80,26 +80,48 @@ class MediaHandler {
 
     loadedVideo = new Movie(parent, filePath);
     loadedVideo.loop();
+    log("Loaded video: " + filePath);
+  }
+
+  void clearMedia() {
+    // Stop and release video if it exists
+    if (loadedVideo != null) {
+      loadedVideo.stop();
+      loadedVideo = null;
+    }
+
+    // Clear image references
+    loadedImage = null;
+    processedImage = null;
+    isVideo = false;
+
+    log("Media cleared");
   }
 
   void processMedia() {
     if (loadedImage != null) {
+      // Get the actual width and height of this canvas
+      int canvasWidth = canvas.width;
+      int canvasHeight = canvas.height;
+
+      //log("Processing media for canvas with dimensions: " + canvasWidth + "x" + canvasHeight);
+
       // Calculate scaling factor to fit the image in the canvas
       float scaleFactor = 1.0;
       if (loadedImage.width > loadedImage.height) {
         // Width is the limiting factor
-        scaleFactor = (float) canvas.width / loadedImage.width;
+        scaleFactor = (float) canvasWidth / loadedImage.width;
       } else {
         // Height is the limiting factor
-        scaleFactor = (float) canvas.height / loadedImage.height;
+        scaleFactor = (float) canvasHeight / loadedImage.height;
       }
 
       // Create a new image with the scaled dimensions
       int newWidth = (int) (loadedImage.width * scaleFactor);
       int newHeight = (int) (loadedImage.height * scaleFactor);
 
-      // Create a processed image
-      processedImage = createImage(canvas.width, canvas.height, RGB);
+      // Create a processed image with the canvas dimensions
+      processedImage = createImage(canvasWidth, canvasHeight, RGB);
       processedImage.loadPixels();
 
       // Fill with black
@@ -108,8 +130,8 @@ class MediaHandler {
       }
 
       // Calculate the position to center the image
-      int xOffset = (canvas.width - newWidth) / 2;
-      int yOffset = (canvas.height - newHeight) / 2;
+      int xOffset = (canvasWidth - newWidth) / 2;
+      int yOffset = (canvasHeight - newHeight) / 2;
 
       // Copy the scaled image to the center of processedImage
       PImage scaledImage = loadedImage.copy();
