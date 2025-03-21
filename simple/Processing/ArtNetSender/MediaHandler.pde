@@ -25,39 +25,53 @@ class MediaHandler {
     // Process video frame if we have a video
     if (isVideo && loadedVideo != null && loadedVideo.available()) {
       loadedVideo.read();
-      
+
       // For P3D compatibility - make sure movie is continually handled
-      loadedVideo.loadPixels();
-      
+      if (enableP3D) {
+        loadedVideo.loadPixels();
+      }
+
       updateVideoFrame();
     }
   }
 
-  //void updateVideoFrame() {
-  //  // Create a PImage from the video frame
-  //  PImage videoFrame = createImage(loadedVideo.width, loadedVideo.height, RGB);
-  //  loadedVideo.loadPixels();
-  //  videoFrame.loadPixels();
-  //  arrayCopy(loadedVideo.pixels, videoFrame.pixels);
-  //  videoFrame.updatePixels();
-
-  //  loadedImage = videoFrame;
-  //  processMedia();
-  //}
-  // Modify the updateVideoFrame() method in MediaHandler class for P3D compatibility
   void updateVideoFrame() {
-    // Create a PImage from the video frame
-    if (loadedImage == null || loadedImage.width != loadedVideo.width || loadedImage.height != loadedVideo.height) {
-      loadedImage = createImage(loadedVideo.width, loadedVideo.height, RGB);
+    if (!enableP3D) {
+      // Create a PImage from the video frame
+      PImage videoFrame = createImage(loadedVideo.width, loadedVideo.height, RGB);
+      loadedVideo.loadPixels();
+      videoFrame.loadPixels();
+      arrayCopy(loadedVideo.pixels, videoFrame.pixels);
+      videoFrame.updatePixels();
+      loadedImage = videoFrame;
+    } else {
+      // Modify the updateVideoFrame() method in MediaHandler class for P3D compatibility
+      // Create a PImage from the video frame
+      if (loadedImage == null || loadedImage.width != loadedVideo.width || loadedImage.height != loadedVideo.height) {
+        loadedImage = createImage(loadedVideo.width, loadedVideo.height, RGB);
+      }
+      loadedImage.loadPixels();
+      arrayCopy(loadedVideo.pixels, loadedImage.pixels);
+      loadedImage.updatePixels();
     }
-
-    loadedImage.loadPixels();
-    arrayCopy(loadedVideo.pixels, loadedImage.pixels);
-    loadedImage.updatePixels();
-
     // Process the media to fit the canvas
     processMedia();
   }
+
+  //// Modify the updateVideoFrame() method in MediaHandler class for P3D compatibility
+  //void updateVideoFrame() {
+  //  // Create a PImage from the video frame
+  //  if (loadedImage == null || loadedImage.width != loadedVideo.width || loadedImage.height != loadedVideo.height) {
+  //    loadedImage = createImage(loadedVideo.width, loadedVideo.height, RGB);
+  //  }
+
+  //  loadedImage.loadPixels();
+  //  arrayCopy(loadedVideo.pixels, loadedImage.pixels);
+  //  loadedImage.updatePixels();
+
+  //  // Process the media to fit the canvas
+  //  processMedia();
+  //}
 
   void loadMedia(String filePath) {
     String fileExt = filePath.substring(filePath.lastIndexOf(".")).toLowerCase();
@@ -87,6 +101,7 @@ class MediaHandler {
     processMedia();
   }
 
+
   //void loadVideoFile(String filePath) {
   //  isVideo = true;
   //  loadedImage = null;
@@ -100,7 +115,7 @@ class MediaHandler {
   //  loadedVideo.loop();
   //  log("Loaded video: " + filePath);
   //}
-  
+
   // Modify the loadVideoFile() method for better P3D compatibility
   void loadVideoFile(String filePath) {
     isVideo = true;
