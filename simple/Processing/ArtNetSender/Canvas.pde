@@ -13,6 +13,7 @@ class Canvas {
 
   void render() {
     // Draw the canvas background
+    noStroke();
     fill(0);
     rect(x, y, width, height);
   }
