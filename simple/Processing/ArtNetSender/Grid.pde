@@ -36,68 +36,7 @@ class Grid {
     log("Pixelation Algorithm: " + algorithmNames[currentAlgorithm]);
   }
 
-  //void drawPixelatedGrid(PImage img, int side) {
-  //  img.loadPixels();
-
-  //  // Calculate color for each cell in the grid using the current algorithm
-  //  // But don't send DMX data here, just return color values to be combined later
-  //  for (int y = 0; y < rows; y++) {
-  //    for (int x = 0; x < cols; x++) {
-  //      int startX = x * cellWidth + canvas.x;
-  //      int startY = y * cellHeight + canvas.y;
-
-  //      // Apply the selected algorithm
-  //      color cellColor;
-  //      switch (currentAlgorithm) {
-  //      case ALGO_AVERAGE:
-  //        cellColor = calculateAverageColor(img, x * cellWidth, y * cellHeight, cellWidth, cellHeight);
-  //        break;
-  //      case ALGO_NEAREST:
-  //        cellColor = getNearestNeighborColor(img, x * cellWidth, y * cellHeight, cellWidth, cellHeight);
-  //        break;
-  //      case ALGO_THRESHOLD:
-  //        cellColor = getThresholdColor(img, x * cellWidth, y * cellHeight, cellWidth, cellHeight);
-  //        break;
-  //      case ALGO_QUANTIZED:
-  //        cellColor = getQuantizedColor(img, x * cellWidth, y * cellHeight, cellWidth, cellHeight);
-  //        break;
-  //      default:
-  //        cellColor = calculateAverageColor(img, x * cellWidth, y * cellHeight, cellWidth, cellHeight);
-  //      }
-
-  //      // Draw the cell with the calculated color
-  //      fill(cellColor);
-  //      noStroke();
-  //      rect(startX, startY, cellWidth, cellHeight);
-
-  //      // Draw grid lines
-  //      stroke(50);
-  //      noFill();
-  //      rect(startX, startY, cellWidth, cellHeight);
-
-  //      // Standard left-to-right, top-to-bottom grid mapping
-  //      int cellIndex = y * 8 + x;
-
-  //      // Store RGB values in DMX data array (3 channels per cell)
-  //      int dmxIndex;
-  //      if (side == 0) {  // Left side
-  //        dmxIndex = cellIndex * 3;
-  //      } else {  // Right side
-  //        dmxIndex = 192 + (cellIndex * 3);  // Start at channel 192 for right side
-  //      }
-
-  //      // Only update if within our range
-  //      if (dmxIndex < 384) {  // 384 = 128 cells * 3 channels
-  //        // Store in the global DMX array instead of sending immediately
-  //        dmxData[dmxIndex] = (byte) (int) red(cellColor);        // R
-  //        dmxData[dmxIndex + 1] = (byte) (int) green(cellColor);  // G
-  //        dmxData[dmxIndex + 2] = (byte) (int) blue(cellColor);   // B
-  //      }
-  //    }
-  //  }
-  //}
-
-  // Modify Grid's drawPixelatedGrid method to ensure proper P3D rendering
+  // Main method for PImage-based media (files, videos)
   void drawPixelatedGrid(PImage img, int side) {
     img.loadPixels();
 
@@ -107,7 +46,6 @@ class Grid {
     }
 
     // Calculate color for each cell in the grid using the current algorithm
-    // But don't send DMX data here, just return color values to be combined later
     for (int y = 0; y < rows; y++) {
       for (int x = 0; x < cols; x++) {
         int startX = x * cellWidth + canvas.x;
@@ -168,6 +106,29 @@ class Grid {
     if (enableP3D) {
       blendMode(BLEND);
     }
+  }
+
+  // Method to process PGraphics (Syphon) - This is where our issue is
+  void drawPixelatedGrid(PGraphics pg, int side) {
+    // Convert PGraphics to PImage for processing
+    PImage img = createImage(pg.width, pg.height, RGB);
+    img.loadPixels();
+    pg.loadPixels();
+
+    // Copy pixels
+    if (pg.pixels.length == img.pixels.length) {
+      arrayCopy(pg.pixels, img.pixels);
+    } else {
+      // Manual copy if sizes differ
+      int minLength = min(pg.pixels.length, img.pixels.length);
+      for (int i = 0; i < minLength; i++) {
+        img.pixels[i] = pg.pixels[i];
+      }
+    }
+    img.updatePixels();
+
+    // Use the existing method with the created image
+    drawPixelatedGrid(img, side);
   }
 
   // 1. AVERAGE - Function to calculate average color in a region (original algorithm)

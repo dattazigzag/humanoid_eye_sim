@@ -26,6 +26,9 @@ class UserInterface {
   Toggle gridToggle;
   Toggle dmxToggle;
   Toggle syncToggle;
+  Toggle leftSyphonToggle;
+  Toggle rightSyphonToggle;
+
 
   UserInterface(PApplet parent, int x, int y, int width, int height) {
     this.parent = parent;
@@ -93,6 +96,38 @@ class UserInterface {
       .onClick(new CallbackListener() {
       public void controlEvent(CallbackEvent event) {
         selectInput("Select right eye image or video file:", "fileSelectedRight");
+      }
+    }
+    );
+
+    int syphonButtonY = currentY;  // Same row as file select buttons
+
+    // Left Syphon Toggle - position it near the left file select
+    leftSyphonToggle = cp5.addToggle("leftSyphonToggle")
+      .setPosition(currentX + buttonWidth + 30, syphonButtonY)
+      .setSize(elementHeight, elementHeight)
+      .setCaptionLabel("SYPHON")
+      .setValue(leftSyphonEnabled)
+      .setColorCaptionLabel(textColor)
+      .onChange(new CallbackListener() {
+      public void controlEvent(CallbackEvent event) {
+        boolean enabled = event.getController().getValue() > 0;
+        toggleLeftSyphon(enabled);
+      }
+    }
+    );
+
+    // Right Syphon Toggle - position it near the right file select
+    rightSyphonToggle = cp5.addToggle("rightSyphonToggle")
+      .setPosition(width - buttonWidth - (50+padding), syphonButtonY)
+      .setSize(elementHeight, elementHeight)
+      .setCaptionLabel("SYPHON")
+      .setValue(rightSyphonEnabled)
+      .setColorCaptionLabel(textColor)
+      .onChange(new CallbackListener() {
+      public void controlEvent(CallbackEvent event) {
+        boolean enabled = event.getController().getValue() > 0;
+        toggleRightSyphon(enabled);
       }
     }
     );
@@ -249,6 +284,7 @@ class UserInterface {
     );
   }
 
+
   void render() {
     // Draw the background for the UI area
     fill(bgColor);
@@ -316,6 +352,28 @@ class UserInterface {
       dmxSender.stop();
       enableDMX = false;
       log("DMX stopped");
+    }
+  }
+
+  void updateLeftSyphonState(boolean enabled) {
+    // Lock/unlock the left file select button based on Syphon state
+    cp5.getController("selectLeftEye").setLock(enabled);
+    // Update the appearance of the button when locked
+    if (enabled) {
+      cp5.getController("selectLeftEye").setColorBackground(disabledColor);
+    } else {
+      cp5.getController("selectLeftEye").setColorBackground(color(50));
+    }
+  }
+
+  void updateRightSyphonState(boolean enabled) {
+    // Lock/unlock the right file select button based on Syphon state
+    cp5.getController("selectRightEye").setLock(enabled);
+    // Update the appearance of the button when locked
+    if (enabled) {
+      cp5.getController("selectRightEye").setColorBackground(disabledColor);
+    } else {
+      cp5.getController("selectRightEye").setColorBackground(color(50));
     }
   }
 
