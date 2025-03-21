@@ -359,7 +359,7 @@ class UserInterface {
 
     // Append to textarea
     //console.append(formattedMessage);
-    
+
     String formattedMessage = message + "\n";
     console.append(formattedMessage);
 

@@ -45,8 +45,12 @@ boolean syncEnabled = false;
 boolean bothVideos = false;
 
 void setup() {
-  size(640, 550);
+  size(640, 550, P3D);
   background(0);
+
+  // Important for P3D mode - set hint to improve 2D rendering performance where appropriate
+  hint(DISABLE_DEPTH_TEST);
+  hint(DISABLE_TEXTURE_MIPMAPS);
 
   frameRate(20);
 
@@ -89,10 +93,21 @@ void draw() {
   // Clear the background
   background(0);
 
+  // Set appropriate rendering state for 2D content
+  hint(DISABLE_DEPTH_TEST);
+
   // Reset DMX data array to zeros at the start of each frame
   for (int i = 0; i < dmxData.length; i++) {
     dmxData[i] = 0;
   }
+
+  // Explicitly set camera to orthographic view for consistent 2D rendering
+  ortho();
+  // Important: push the matrix state for 2D rendering
+  pushMatrix();
+  // Set the coordinate system to top-left origin for 2D
+  //resetMatrix();
+  translate(0, 0);
 
   // Render canvases
   leftCanvas.render();
@@ -103,6 +118,7 @@ void draw() {
     if (!leftGrid.isEnabled()) {
       // Show normal image/video - ensure it's positioned correctly at the left canvas origin
       image(leftMediaHandler.getProcessedMedia(), leftCanvas.x, leftCanvas.y);
+      //image(leftMediaHandler.loadedVideo, 0, 0, 0, 0);
     } else {
       // Show pixelated version
       leftGrid.drawPixelatedGrid(leftMediaHandler.getProcessedMedia(), 0); // 0 indicates left side
@@ -114,19 +130,34 @@ void draw() {
     if (!rightGrid.isEnabled()) {
       // Show normal image/video - ensure it's positioned correctly at the right canvas origin
       image(rightMediaHandler.getProcessedMedia(), rightCanvas.x, rightCanvas.y);
+      //image(rightMediaHandler.loadedVideo, 0, 0, 0, 0);
     } else {
       // Show pixelated version
       rightGrid.drawPixelatedGrid(rightMediaHandler.getProcessedMedia(), 1); // 1 indicates right side
     }
   }
 
+  // CRITICAL FIX: Render zero-size images of videos to keep P3D video playback working
+  if (leftMediaHandler.isVideo && leftMediaHandler.loadedVideo != null) {
+    image(leftMediaHandler.loadedVideo, 0, 0, 0, 0);
+  }
+
+  if (rightMediaHandler.isVideo && rightMediaHandler.loadedVideo != null) {
+    image(rightMediaHandler.loadedVideo, 0, 0, 0, 0);
+  }
+
+  // Restore the matrix state
+  popMatrix();
+  
   // Draw a dividing line for the reserved area
   stroke(50);
+  strokeWeight(0.5);
   line(0, leftCanvas.height, CANVAS_WIDTH, leftCanvas.height);
   noStroke();
 
   // Draw a dividing line between left and right canvases
   stroke(100);
+  strokeWeight(0.5);
   line(SINGLE_CANVAS_WIDTH, 0, SINGLE_CANVAS_WIDTH, CANVAS_HEIGHT);
   noStroke();
 
@@ -140,7 +171,7 @@ void draw() {
   // Handle synchronized playback if enabled
   if (syncEnabled && bothVideos) {
     // Only sync every few frames to avoid performance issues
-    if (frameCount % 10 == 0) {  // Sync every 10 frames
+    if (frameCount % 8 == 0) {  // Sync every 8 frames
       syncVideoPlayback();
     }
   }
@@ -383,7 +414,7 @@ void exit() {
 // Helper method to print to console with proper logging
 void log(String message) {
   println(message);  // Still print to Processing console
-  
+
   // Check if UI and console are initialized before using them
   if (ui != null && ui.console != null) {
     ui.printToConsole(message);
