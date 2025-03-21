@@ -76,6 +76,6 @@ void keyPressed() {
   } else if (key == 'l') {
     println("Available Syphon servers:");
     println(SyphonClient.listServers());
-    SyphonClient.
+    //SyphonClient.
   }
 }
