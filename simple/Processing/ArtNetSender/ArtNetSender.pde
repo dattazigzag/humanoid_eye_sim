@@ -8,6 +8,10 @@ import java.net.InetAddress;
 // ControlP5 for UI controls
 import controlP5.*;
 
+
+boolean enableP3D = true;
+int fr = 20;               // framnerate
+
 // Main sketch dimensions
 final int SKETCH_WIDTH = 640;
 final int SKETCH_HEIGHT = 550;
@@ -44,15 +48,32 @@ int subnet = 0;  // DMX Subnet
 boolean syncEnabled = false;
 boolean bothVideos = false;
 
+void settings() {
+  if (!enableP3D) {
+    size(640, 550);  // Default renderer
+    println("[setting]\tUsing default renderer");
+  } else {
+    size(640, 550, P3D);  // P3D renderer
+    println("[setting]\tUsing P3D renderer");
+  }
+}
+
 void setup() {
-  size(640, 550, P3D);
+
   background(0);
 
   // Important for P3D mode - set hint to improve 2D rendering performance where appropriate
-  hint(DISABLE_DEPTH_TEST);
-  hint(DISABLE_TEXTURE_MIPMAPS);
+  if (enableP3D) {
+    println("[setup]\tUsing P3D hint optmizations");
+    hint(DISABLE_DEPTH_TEST);
+    hint(DISABLE_TEXTURE_MIPMAPS);
+  } else {
+    println("[setup]\tNot using P3D hint optmizations");
+  }
 
-  frameRate(20);
+
+  frameRate(fr);
+  println("[setup]\tUsing framerate: " + str(fr) + " FPS");
 
   // The below always makes the window stay on top of other windows
   surface.setAlwaysOnTop(true);
@@ -93,21 +114,25 @@ void draw() {
   // Clear the background
   background(0);
 
-  // Set appropriate rendering state for 2D content
-  hint(DISABLE_DEPTH_TEST);
+  if (enableP3D) {
+    // Set appropriate rendering state for 2D content
+    hint(DISABLE_DEPTH_TEST);
+  }
 
   // Reset DMX data array to zeros at the start of each frame
   for (int i = 0; i < dmxData.length; i++) {
     dmxData[i] = 0;
   }
 
-  // Explicitly set camera to orthographic view for consistent 2D rendering
-  ortho();
-  // Important: push the matrix state for 2D rendering
-  pushMatrix();
-  // Set the coordinate system to top-left origin for 2D
-  //resetMatrix();
-  translate(0, 0);
+  if (enableP3D) {
+    // Explicitly set camera to orthographic view for consistent 2D rendering
+    ortho();
+    // Important: push the matrix state for 2D rendering
+    pushMatrix();
+    // Set the coordinate system to top-left origin for 2D
+    // resetMatrix();
+    translate(0, 0);
+  }
 
   // Render canvases
   leftCanvas.render();
@@ -138,17 +163,20 @@ void draw() {
   }
 
   // CRITICAL FIX: Render zero-size images of videos to keep P3D video playback working
-  if (leftMediaHandler.isVideo && leftMediaHandler.loadedVideo != null) {
-    image(leftMediaHandler.loadedVideo, 0, 0, 0, 0);
+  if (enableP3D) {
+    if (leftMediaHandler.isVideo && leftMediaHandler.loadedVideo != null) {
+      image(leftMediaHandler.loadedVideo, 0, 0, 0, 0);
+    }
+    if (rightMediaHandler.isVideo && rightMediaHandler.loadedVideo != null) {
+      image(rightMediaHandler.loadedVideo, 0, 0, 0, 0);
+    }
   }
 
-  if (rightMediaHandler.isVideo && rightMediaHandler.loadedVideo != null) {
-    image(rightMediaHandler.loadedVideo, 0, 0, 0, 0);
+  if (enableP3D) {
+    // Restore the matrix state
+    popMatrix();
   }
 
-  // Restore the matrix state
-  popMatrix();
-  
   // Draw a dividing line for the reserved area
   stroke(50);
   strokeWeight(0.5);
@@ -171,7 +199,7 @@ void draw() {
   // Handle synchronized playback if enabled
   if (syncEnabled && bothVideos) {
     // Only sync every few frames to avoid performance issues
-    if (frameCount % 8 == 0) {  // Sync every 8 frames
+    if (frameCount % 5 == 0) {  // Sync every 5 frames
       syncVideoPlayback();
     }
   }

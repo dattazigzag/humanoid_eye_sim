@@ -11,8 +11,8 @@ class Canvas {
     println("Created canvas at (" + x + "," + y + ") with size " + width + "x" + height);
   }
 
+  // Draws the canvas background
   void render() {
-    // Draw the canvas background
     noStroke();
     fill(0);
     rect(x, y, width, height);

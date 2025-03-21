@@ -96,12 +96,15 @@ class Grid {
   //    }
   //  }
   //}
+
   // Modify Grid's drawPixelatedGrid method to ensure proper P3D rendering
   void drawPixelatedGrid(PImage img, int side) {
     img.loadPixels();
 
     // Use blend mode for consistent rendering in P3D
-    blendMode(BLEND);
+    if (enableP3D) {
+      blendMode(BLEND);
+    }
 
     // Calculate color for each cell in the grid using the current algorithm
     // But don't send DMX data here, just return color values to be combined later
@@ -161,8 +164,10 @@ class Grid {
       }
     }
 
-    // Reset blend mode
-    blendMode(BLEND);
+    // Reset blend mode, for P3D
+    if (enableP3D) {
+      blendMode(BLEND);
+    }
   }
 
   // 1. AVERAGE - Function to calculate average color in a region (original algorithm)
