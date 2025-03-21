@@ -1,16 +1,27 @@
 // Global DMX data array
-byte[] dmxData = new byte[512];  // Standard DMX universe size// Libraries for file dropping and video processing
+byte[] dmxData = new byte[512];  // Standard DMX universe size
+
+// Drop library for file (Img / Video) load
 import drop.*;
+
+// Video library
 import processing.video.*;
+
 // Art-Net library
 import ch.bildspur.artnet.*;
 import java.net.InetAddress;
+
 // ControlP5 for UI controls
 import controlP5.*;
 
+// Syphon library for incoming texture
+// ** Mac Only - Processing 4 for Intel X86 Architecture
+// ** Till someone makes a syphon Lib for Apple silicon)
+import codeanticode.syphon.*;
 
+// Global settings
 boolean enableP3D = true;
-int fr = 20;               // framnerate
+int fr = 20;  // framerate
 
 // Main sketch dimensions
 final int SKETCH_WIDTH = 640;
@@ -48,6 +59,18 @@ int subnet = 0;  // DMX Subnet
 boolean syncEnabled = false;
 boolean bothVideos = false;
 
+// Syphon related
+SyphonClient leftSyphonClient;
+SyphonClient rightSyphonClient;
+PGraphics leftSyphonCanvas;
+PGraphics rightSyphonCanvas;
+boolean leftSyphonEnabled = false;
+boolean rightSyphonEnabled = false;
+
+// Frame counters for debugging
+int leftSyphonFrameCount = 0;
+int rightSyphonFrameCount = 0;
+
 void settings() {
   if (!enableP3D) {
     size(640, 550);  // Default renderer
@@ -59,27 +82,25 @@ void settings() {
 }
 
 void setup() {
-
   background(0);
 
   // Important for P3D mode - set hint to improve 2D rendering performance where appropriate
   if (enableP3D) {
-    println("[setup]\tUsing P3D hint optmizations");
+    println("[setup]\tUsing P3D hint optimizations");
     hint(DISABLE_DEPTH_TEST);
     hint(DISABLE_TEXTURE_MIPMAPS);
   } else {
-    println("[setup]\tNot using P3D hint optmizations");
+    println("[setup]\tNot using P3D hint optimizations");
   }
 
-
-  frameRate(fr);
-  println("[setup]\tUsing framerate: " + str(fr) + " FPS");
+  //frameRate(fr);
+  //println("[setup]\tUsing framerate: " + str(fr) + " FPS");
 
   // The below always makes the window stay on top of other windows
   surface.setAlwaysOnTop(true);
 
   // Initialize components
-  // Create two canvases side by side, each with their own 160px width
+  // Create two canvases side by side, each with their own 320px width
   leftCanvas = new Canvas(0, 0, SINGLE_CANVAS_WIDTH, CANVAS_HEIGHT);
   rightCanvas = new Canvas(SINGLE_CANVAS_WIDTH, 0, SINGLE_CANVAS_WIDTH, CANVAS_HEIGHT);
 
@@ -88,6 +109,10 @@ void setup() {
 
   leftMediaHandler = new MediaHandler(this, leftCanvas);
   rightMediaHandler = new MediaHandler(this, rightCanvas);
+
+  // Initialize Syphon canvases
+  leftSyphonCanvas = createGraphics(SINGLE_CANVAS_WIDTH, CANVAS_HEIGHT, P3D);
+  rightSyphonCanvas = createGraphics(SINGLE_CANVAS_WIDTH, CANVAS_HEIGHT, P3D);
 
   // Setup drop functionality
   drop = new SDrop(this);
@@ -105,9 +130,9 @@ void setup() {
   updateSyncState();
 
   // Log application startup
-  log("ArtNetSender started");
-  log("Canvas dimensions: " + CANVAS_WIDTH + "x" + CANVAS_HEIGHT);
-  log("Console buffer limit: " + CONSOLE_BUFFER_LIMIT + " lines");
+  log("[setup]\tArtNetSender started");
+  log("[setup]\tCanvas dimensions: " + CANVAS_WIDTH + "x" + CANVAS_HEIGHT);
+  log("[setup]\tConsole buffer limit: " + CONSOLE_BUFFER_LIMIT + " lines");
 }
 
 void draw() {
@@ -124,41 +149,95 @@ void draw() {
     dmxData[i] = 0;
   }
 
+  // Process Syphon frames if enabled
+  if (leftSyphonEnabled && leftSyphonClient != null) {
+    boolean newFrame = leftSyphonClient.newFrame();
+    if (newFrame) {
+      leftSyphonFrameCount++;
+      // Get the frame from Syphon
+      leftSyphonClient.getImage(leftSyphonCanvas);
+      // Force canvas to update
+      leftSyphonCanvas.loadPixels();
+      // Update media handler with new frame
+      leftMediaHandler.updateSyphonFrame(leftSyphonCanvas);
+
+      if (leftSyphonFrameCount % 30 == 0) {
+        log("Left Syphon received frame #" + leftSyphonFrameCount);
+      }
+    }
+  }
+
+  if (rightSyphonEnabled && rightSyphonClient != null) {
+    boolean newFrame = rightSyphonClient.newFrame();
+    if (newFrame) {
+      rightSyphonFrameCount++;
+      // Get the frame from Syphon
+      rightSyphonClient.getImage(rightSyphonCanvas);
+      // Force canvas to update
+      rightSyphonCanvas.loadPixels();
+      // Update media handler with new frame
+      rightMediaHandler.updateSyphonFrame(rightSyphonCanvas);
+
+      if (rightSyphonFrameCount % 30 == 0) {
+        log("Right Syphon received frame #" + rightSyphonFrameCount);
+      }
+    }
+  }
+
+  // ... For consistent 2D rendering when using P3D - for Syphon
   if (enableP3D) {
-    // Explicitly set camera to orthographic view for consistent 2D rendering
-    ortho();
-    // Important: push the matrix state for 2D rendering
-    pushMatrix();
-    // Set the coordinate system to top-left origin for 2D
-    // resetMatrix();
-    translate(0, 0);
+    ortho();        // Explicitly set camera to orthographic view for consistent 2D rendering
+    pushMatrix();   // Important: push the matrix state for 2D rendering
+    translate(0, 0);  // Ensure proper positioning
   }
 
   // Render canvases
   leftCanvas.render();
   rightCanvas.render();
 
+  // *** MEDIA RENDERING - WITHIN THE TRANSFORMED COORDINATE SYSTEM ***
+
   // Draw left media content
   if (leftMediaHandler.hasContent()) {
     if (!leftGrid.isEnabled()) {
-      // Show normal image/video - ensure it's positioned correctly at the left canvas origin
-      image(leftMediaHandler.getProcessedMedia(), leftCanvas.x, leftCanvas.y);
-      //image(leftMediaHandler.loadedVideo, 0, 0, 0, 0);
+      // Direct rendering for Syphon when grid is disabled
+      if (leftSyphonEnabled && leftSyphonCanvas != null) {
+        image(leftSyphonCanvas, leftCanvas.x, leftCanvas.y);
+      } else {
+        // Show normal image/video for file content
+        image(leftMediaHandler.getProcessedMedia(), leftCanvas.x, leftCanvas.y);
+      }
     } else {
-      // Show pixelated version
-      leftGrid.drawPixelatedGrid(leftMediaHandler.getProcessedMedia(), 0); // 0 indicates left side
+      // Grid rendering - use direct canvas for Syphon to ensure freshest frame
+      if (leftSyphonEnabled && leftSyphonCanvas != null) {
+        leftSyphonCanvas.loadPixels();
+        leftGrid.drawPixelatedGrid(leftSyphonCanvas, 0); // This part isn't working correctly
+      } else {
+        // Normal file-based media with grid
+        leftGrid.drawPixelatedGrid(leftMediaHandler.getProcessedMedia(), 0);
+      }
     }
   }
 
   // Draw right media content
   if (rightMediaHandler.hasContent()) {
     if (!rightGrid.isEnabled()) {
-      // Show normal image/video - ensure it's positioned correctly at the right canvas origin
-      image(rightMediaHandler.getProcessedMedia(), rightCanvas.x, rightCanvas.y);
-      //image(rightMediaHandler.loadedVideo, 0, 0, 0, 0);
+      // Direct rendering for Syphon when grid is disabled
+      if (rightSyphonEnabled && rightSyphonCanvas != null) {
+        image(rightSyphonCanvas, rightCanvas.x, rightCanvas.y);
+      } else {
+        // Show normal image/video for file content
+        image(rightMediaHandler.getProcessedMedia(), rightCanvas.x, rightCanvas.y);
+      }
     } else {
-      // Show pixelated version
-      rightGrid.drawPixelatedGrid(rightMediaHandler.getProcessedMedia(), 1); // 1 indicates right side
+      // Grid rendering - use direct canvas for Syphon to ensure freshest frame
+      if (rightSyphonEnabled && rightSyphonCanvas != null) {
+        rightSyphonCanvas.loadPixels();
+        rightGrid.drawPixelatedGrid(rightSyphonCanvas, 1); // This part isn't working correctly
+      } else {
+        // Normal file-based media with grid
+        rightGrid.drawPixelatedGrid(rightMediaHandler.getProcessedMedia(), 1);
+      }
     }
   }
 
@@ -236,6 +315,133 @@ void syncVideoPlayback() {
   }
 }
 
+// List available Syphon servers
+void listSyphonServers() {
+  HashMap[] servers = SyphonClient.listServers();
+
+  if (servers.length == 0) {
+    log("No Syphon servers found");
+  } else {
+    log("Available Syphon servers:");
+    for (int i = 0; i < servers.length; i++) {
+      String appName = (String)servers[i].get("AppName");
+      String serverName = (String)servers[i].get("ServerName");
+      log(" - " + appName + ": " + serverName);
+    }
+  }
+}
+
+void toggleLeftSyphon(boolean enable) {
+  leftSyphonEnabled = enable;
+
+  if (enable) {
+    // Check available servers first
+    HashMap[] servers = SyphonClient.listServers();
+    String appName = "";
+    String serverName = "LeftEye";
+
+    // Look for matching server name
+    for (int i = 0; i < servers.length; i++) {
+      String sName = (String)servers[i].get("ServerName");
+      if (sName.equals("LeftEye")) {
+        appName = (String)servers[i].get("AppName");
+        log("Found LeftEye server from app: " + appName);
+        break;
+      }
+    }
+
+    // Create Syphon client with found app name
+    if (leftSyphonClient == null) {
+      leftSyphonClient = new SyphonClient(this, appName, "LeftEye");
+      log("Created left Syphon client - looking for '" + appName + ":" + serverName + "'");
+    }
+
+    // Initialize syphon canvas if needed
+    if (leftSyphonCanvas == null) {
+      leftSyphonCanvas = createGraphics(SINGLE_CANVAS_WIDTH, CANVAS_HEIGHT, P3D);
+    }
+
+    // Clear any loaded media when switching to Syphon
+    leftMediaHandler.clearMedia();
+    leftMediaHandler.setSyphonMode(true);
+
+    log("Left canvas switched to Syphon input");
+  } else {
+    // Disable Syphon but keep the client around
+    leftMediaHandler.setSyphonMode(false);
+    log("Left canvas switched to file input");
+  }
+
+  // Update UI elements
+  ui.updateLeftSyphonState(enable);
+}
+
+void toggleRightSyphon(boolean enable) {
+  rightSyphonEnabled = enable;
+
+  if (enable) {
+    // Check available servers first
+    HashMap[] servers = SyphonClient.listServers();
+    String appName = "";
+    String serverName = "RightEye";
+
+    // Look for matching server name
+    for (int i = 0; i < servers.length; i++) {
+      String sName = (String)servers[i].get("ServerName");
+      if (sName.equals("RightEye")) {
+        appName = (String)servers[i].get("AppName");
+        log("Found RightEye server from app: " + appName);
+        break;
+      }
+    }
+
+    // Create Syphon client with found app name
+    if (rightSyphonClient == null) {
+      rightSyphonClient = new SyphonClient(this, appName, "RightEye");
+      log("Created right Syphon client - looking for '" + appName + ":" + serverName + "'");
+    }
+
+    // Initialize syphon canvas if needed
+    if (rightSyphonCanvas == null) {
+      rightSyphonCanvas = createGraphics(SINGLE_CANVAS_WIDTH, CANVAS_HEIGHT, P3D);
+    }
+
+    // Clear any loaded media when switching to Syphon
+    rightMediaHandler.clearMedia();
+    rightMediaHandler.setSyphonMode(true);
+
+    log("Right canvas switched to Syphon input");
+  } else {
+    // Disable Syphon but keep the client around
+    rightMediaHandler.setSyphonMode(false);
+    log("Right canvas switched to file input");
+  }
+
+  // Update UI elements
+  ui.updateRightSyphonState(enable);
+}
+
+// Method to recreate Syphon clients, if needed
+void recreateSyphonClients() {
+  log("Recreating Syphon clients...");
+
+  if (leftSyphonEnabled) {
+    if (leftSyphonClient != null) {
+      leftSyphonClient.stop();
+    }
+    leftSyphonClient = null;
+    toggleLeftSyphon(true);
+  }
+
+  if (rightSyphonEnabled) {
+    if (rightSyphonClient != null) {
+      rightSyphonClient.stop();
+    }
+    rightSyphonClient = null;
+    toggleRightSyphon(true);
+  }
+}
+
 void keyPressed() {
   if (key == 'g' || key == 'G') {
     leftGrid.toggleGrid();
@@ -259,6 +465,12 @@ void keyPressed() {
   } else if (key == 's' || key == 'S') {
     // Toggle sync
     toggleSync();
+  } else if (key == 'l' || key == 'L') {
+    // List available Syphon servers
+    listSyphonServers();
+  } else if (key == 'r' || key == 'R') {
+    // Recreate Syphon clients
+    recreateSyphonClients();
   } else if (key == BACKSPACE) {
     // Delete the file under the mouse cursor
     deleteFileUnderCursor();
@@ -384,11 +596,19 @@ void dropEvent(DropEvent event) {
     // Determine drop location
     if (event.y() < CANVAS_HEIGHT) {
       if (event.x() < SINGLE_CANVAS_WIDTH) {
-        // Left side drop
-        leftMediaHandler.loadMedia(event.filePath());
+        // Left side drop - only if Syphon is not enabled
+        if (!leftSyphonEnabled) {
+          leftMediaHandler.loadMedia(event.filePath());
+        } else {
+          log("Left side is in Syphon mode - drag and drop disabled");
+        }
       } else {
-        // Right side drop
-        rightMediaHandler.loadMedia(event.filePath());
+        // Right side drop - only if Syphon is not enabled
+        if (!rightSyphonEnabled) {
+          rightMediaHandler.loadMedia(event.filePath());
+        } else {
+          log("Right side is in Syphon mode - drag and drop disabled");
+        }
       }
       // Update sync state after new file loaded
       updateSyncState();
@@ -399,15 +619,35 @@ void dropEvent(DropEvent event) {
 // File selection callbacks
 void fileSelectedLeft(File selection) {
   if (selection != null) {
-    leftMediaHandler.loadMedia(selection.getAbsolutePath());
-    updateSyncState();
+    // Only load if Syphon is not enabled
+    if (!leftSyphonEnabled) {
+      leftMediaHandler.loadMedia(selection.getAbsolutePath());
+      updateSyncState();
+    } else {
+      log("Left side is in Syphon mode - file loading disabled");
+    }
   }
 }
 
 void fileSelectedRight(File selection) {
   if (selection != null) {
-    rightMediaHandler.loadMedia(selection.getAbsolutePath());
-    updateSyncState();
+    // Only load if Syphon is not enabled
+    if (!rightSyphonEnabled) {
+      rightMediaHandler.loadMedia(selection.getAbsolutePath());
+      updateSyncState();
+    } else {
+      log("Right side is in Syphon mode - file loading disabled");
+    }
+  }
+}
+
+// Helper method to print to console with proper logging
+void log(String message) {
+  println(message);  // Still print to Processing console
+
+  // Check if UI and console are initialized before using them
+  if (ui != null && ui.console != null) {
+    ui.printToConsole(message);
   }
 }
 
@@ -435,16 +675,4 @@ void exit() {
 
   // Call the super method to continue with normal exit process
   super.exit();
-}
-
-
-
-// Helper method to print to console with proper logging
-void log(String message) {
-  println(message);  // Still print to Processing console
-
-  // Check if UI and console are initialized before using them
-  if (ui != null && ui.console != null) {
-    ui.printToConsole(message);
-  }
 }

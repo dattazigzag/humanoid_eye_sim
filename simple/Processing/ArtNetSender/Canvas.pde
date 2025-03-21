@@ -1,5 +1,4 @@
 // Canvas class to handle the main display area
-
 class Canvas {
   int x, y, width, height;
 
@@ -11,10 +10,10 @@ class Canvas {
     println("Created canvas at (" + x + "," + y + ") with size " + width + "x" + height);
   }
 
-  // Draws the canvas background
   void render() {
-    noStroke();
+    // Draw the canvas background
     fill(0);
+    noStroke();
     rect(x, y, width, height);
   }
 }
