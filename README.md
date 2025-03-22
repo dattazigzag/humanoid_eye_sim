@@ -82,6 +82,8 @@ The application divides each canvas into an 8x8 grid, creating 64 cells per side
 - Left canvas: DMX channels 1-192
 - Right canvas: DMX channels 193-384
 
+---
+
 ## Troubleshooting
 
 ### Syphon Issues
@@ -91,24 +93,9 @@ The application divides each canvas into an 8x8 grid, creating 64 cells per side
 - Try reloading Syphon with the `R` key
 - Confirm your Syphon source is running and publishing
 
-### Performance Issues
-
-- Disable P3D mode in settings for better performance on older hardware
-- Reduce video resolution for smoother operation
-- Close other memory-intensive applications
-
 ### DMX Problems
 
 - Check network connectivity
 - Verify IP address, subnet, and universe settings
 - Ensure receiving devices are properly configured
 - Check console for error messages
-
-## Credits
-
-- ArtNet DMX Pixelator - Created with Processing
-- Uses the following libraries:
-  - [Syphon](https://github.com/Syphon/Processing) for inter-application video sharing
-  - [ArtNet](https://github.com/cansik/artnet4j) for DMX communication
-  - [ControlP5](https://github.com/sojamo/controlp5) for UI elements
-  - [Drop](https://github.com/transfluxus/drop) for drag and drop functionality
