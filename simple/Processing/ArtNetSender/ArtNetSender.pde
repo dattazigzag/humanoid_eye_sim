@@ -16,7 +16,7 @@ import controlP5.*;
 
 // Syphon library for incoming texture
 // ** Mac Only - Processing 4 for Intel X86 Architecture
-// ** Till someone makes a syphon Lib for Apple silicon)
+// ** Till someone makes a syphon Lib for Apple silicon
 import codeanticode.syphon.*;
 
 // Global settings
@@ -67,9 +67,9 @@ PGraphics rightSyphonCanvas;
 boolean leftSyphonEnabled = false;
 boolean rightSyphonEnabled = false;
 
-// Frame counters for debugging
-int leftSyphonFrameCount = 0;
-int rightSyphonFrameCount = 0;
+// Snapshot images for pixelation
+PImage leftContentSnapshot;
+PImage rightContentSnapshot;
 
 void settings() {
   if (!enableP3D) {
@@ -93,6 +93,8 @@ void setup() {
     println("[setup]\tNot using P3D hint optimizations");
   }
 
+  // ** If using Syphon, don't introduce a FrameRate
+  // ** as then the other syphon server may be running at a diff framerate
   //frameRate(fr);
   //println("[setup]\tUsing framerate: " + str(fr) + " FPS");
 
@@ -113,6 +115,10 @@ void setup() {
   // Initialize Syphon canvases
   leftSyphonCanvas = createGraphics(SINGLE_CANVAS_WIDTH, CANVAS_HEIGHT, P3D);
   rightSyphonCanvas = createGraphics(SINGLE_CANVAS_WIDTH, CANVAS_HEIGHT, P3D);
+
+  // Initialize snapshot images for pixelation
+  leftContentSnapshot = createImage(SINGLE_CANVAS_WIDTH, CANVAS_HEIGHT, RGB);
+  rightContentSnapshot = createImage(SINGLE_CANVAS_WIDTH, CANVAS_HEIGHT, RGB);
 
   // Setup drop functionality
   drop = new SDrop(this);
@@ -145,46 +151,12 @@ void draw() {
   }
 
   // Reset DMX data array to zeros at the start of each frame
-  for (int i = 0; i < dmxData.length; i++) {
-    dmxData[i] = 0;
-  }
+  resetDMXData();
 
   // Process Syphon frames if enabled
-  if (leftSyphonEnabled && leftSyphonClient != null) {
-    boolean newFrame = leftSyphonClient.newFrame();
-    if (newFrame) {
-      leftSyphonFrameCount++;
-      // Get the frame from Syphon
-      leftSyphonClient.getImage(leftSyphonCanvas);
-      // Force canvas to update
-      leftSyphonCanvas.loadPixels();
-      // Update media handler with new frame
-      leftMediaHandler.updateSyphonFrame(leftSyphonCanvas);
+  processSyphonInputs();
 
-      if (leftSyphonFrameCount % 30 == 0) {
-        log("Left Syphon received frame #" + leftSyphonFrameCount);
-      }
-    }
-  }
-
-  if (rightSyphonEnabled && rightSyphonClient != null) {
-    boolean newFrame = rightSyphonClient.newFrame();
-    if (newFrame) {
-      rightSyphonFrameCount++;
-      // Get the frame from Syphon
-      rightSyphonClient.getImage(rightSyphonCanvas);
-      // Force canvas to update
-      rightSyphonCanvas.loadPixels();
-      // Update media handler with new frame
-      rightMediaHandler.updateSyphonFrame(rightSyphonCanvas);
-
-      if (rightSyphonFrameCount % 30 == 0) {
-        log("Right Syphon received frame #" + rightSyphonFrameCount);
-      }
-    }
-  }
-
-  // ... For consistent 2D rendering when using P3D - for Syphon
+  // Setup rendering context
   if (enableP3D) {
     ortho();        // Explicitly set camera to orthographic view for consistent 2D rendering
     pushMatrix();   // Important: push the matrix state for 2D rendering
@@ -195,67 +167,15 @@ void draw() {
   leftCanvas.render();
   rightCanvas.render();
 
-  // *** MEDIA RENDERING - WITHIN THE TRANSFORMED COORDINATE SYSTEM ***
+  // Render media content to canvases
+  renderCanvasContent();
 
-  // Draw left media content
-  if (leftMediaHandler.hasContent()) {
-    if (!leftGrid.isEnabled()) {
-      // Direct rendering for Syphon when grid is disabled
-      if (leftSyphonEnabled && leftSyphonCanvas != null) {
-        image(leftSyphonCanvas, leftCanvas.x, leftCanvas.y);
-      } else {
-        // Show normal image/video for file content
-        image(leftMediaHandler.getProcessedMedia(), leftCanvas.x, leftCanvas.y);
-      }
-    } else {
-      // Grid rendering - use direct canvas for Syphon to ensure freshest frame
-      if (leftSyphonEnabled && leftSyphonCanvas != null) {
-        leftSyphonCanvas.loadPixels();
-        leftGrid.drawPixelatedGrid(leftSyphonCanvas, 0); // This part isn't working correctly
-      } else {
-        // Normal file-based media with grid
-        leftGrid.drawPixelatedGrid(leftMediaHandler.getProcessedMedia(), 0);
-      }
-    }
-  }
-
-  // Draw right media content
-  if (rightMediaHandler.hasContent()) {
-    if (!rightGrid.isEnabled()) {
-      // Direct rendering for Syphon when grid is disabled
-      if (rightSyphonEnabled && rightSyphonCanvas != null) {
-        image(rightSyphonCanvas, rightCanvas.x, rightCanvas.y);
-      } else {
-        // Show normal image/video for file content
-        image(rightMediaHandler.getProcessedMedia(), rightCanvas.x, rightCanvas.y);
-      }
-    } else {
-      // Grid rendering - use direct canvas for Syphon to ensure freshest frame
-      if (rightSyphonEnabled && rightSyphonCanvas != null) {
-        rightSyphonCanvas.loadPixels();
-        rightGrid.drawPixelatedGrid(rightSyphonCanvas, 1); // This part isn't working correctly
-      } else {
-        // Normal file-based media with grid
-        rightGrid.drawPixelatedGrid(rightMediaHandler.getProcessedMedia(), 1);
-      }
-    }
-  }
-
-  // CRITICAL FIX: Render zero-size images of videos to keep P3D video playback working
+  // Reset rendering context if using P3D
   if (enableP3D) {
-    if (leftMediaHandler.isVideo && leftMediaHandler.loadedVideo != null) {
-      image(leftMediaHandler.loadedVideo, 0, 0, 0, 0);
-    }
-    if (rightMediaHandler.isVideo && rightMediaHandler.loadedVideo != null) {
-      image(rightMediaHandler.loadedVideo, 0, 0, 0, 0);
-    }
-  }
-
-  if (enableP3D) {
-    // Restore the matrix state
     popMatrix();
   }
 
+  // Draw dividing lines
   // Draw a dividing line for the reserved area
   stroke(50);
   strokeWeight(0.5);
@@ -271,6 +191,148 @@ void draw() {
   // Render UI
   ui.render();
 
+  // Update videos and handle synchronized playback
+  updateVideosAndSync();
+
+  // Send DMX data
+  sendDMXData();
+}
+
+
+
+// Reset the DMX data array to zeros
+void resetDMXData() {
+  for (int i = 0; i < dmxData.length; i++) {
+    dmxData[i] = 0;
+  }
+}
+
+
+// Process incoming Syphon frames
+void processSyphonInputs() {
+  // Process left Syphon input
+  if (leftSyphonEnabled && leftSyphonClient != null) {
+    boolean newFrame = leftSyphonClient.newFrame();
+    if (newFrame) {
+      try {
+        leftSyphonCanvas.beginDraw();
+        leftSyphonClient.getImage(leftSyphonCanvas);
+        leftSyphonCanvas.endDraw();
+
+        // Update media handler with new frame
+        leftMediaHandler.updateSyphonFrame(leftSyphonCanvas);
+      }
+      catch (Exception e) {
+        log("Error processing left Syphon frame: " + e.getMessage());
+      }
+    }
+  }
+
+  // Process right Syphon input
+  if (rightSyphonEnabled && rightSyphonClient != null) {
+      boolean newFrame = rightSyphonClient.newFrame();
+    if (newFrame) {
+      try {
+        rightSyphonCanvas.beginDraw();
+        rightSyphonClient.getImage(rightSyphonCanvas);
+        rightSyphonCanvas.endDraw();
+
+        // Update media handler with new frame
+        rightMediaHandler.updateSyphonFrame(rightSyphonCanvas);
+      }
+      catch (Exception e) {
+        log("Error processing right Syphon frame: " + e.getMessage());
+      }
+    }
+  }
+}
+
+
+
+// Render content to both canvases
+void renderCanvasContent() {
+  // Render left canvas content
+  renderCanvasSide(leftMediaHandler, leftCanvas, leftGrid,
+    leftSyphonEnabled, leftSyphonCanvas,
+    leftContentSnapshot, 0);
+
+  // Render right canvas content
+  renderCanvasSide(rightMediaHandler, rightCanvas, rightGrid,
+    rightSyphonEnabled, rightSyphonCanvas,
+    rightContentSnapshot, 1);
+
+  // CRITICAL FIX: Render zero-size images of videos to keep P3D video playback working
+  if (enableP3D) {
+    if (leftMediaHandler.isVideo && leftMediaHandler.loadedVideo != null) {
+      image(leftMediaHandler.loadedVideo, 0, 0, 0, 0);
+    }
+    if (rightMediaHandler.isVideo && rightMediaHandler.loadedVideo != null) {
+      image(rightMediaHandler.loadedVideo, 0, 0, 0, 0);
+    }
+  }
+}
+
+
+
+// Helper method to render one side of the canvas
+void renderCanvasSide(MediaHandler mediaHandler, Canvas canvas, Grid grid,
+  boolean syphonEnabled, PGraphics syphonCanvas,
+  PImage contentSnapshot, int side) {
+  if (!mediaHandler.hasContent()) {
+    return;
+  }
+
+  if (!grid.isEnabled()) {
+    // No grid - direct display
+    if (syphonEnabled && syphonCanvas != null) {
+      image(syphonCanvas, canvas.x, canvas.y);
+    } else {
+      image(mediaHandler.getProcessedMedia(), canvas.x, canvas.y);
+    }
+  } else {
+    // With grid - use snapshot approach for Syphon
+    if (syphonEnabled && syphonCanvas != null) {
+      // Draw content first
+      image(syphonCanvas, canvas.x, canvas.y);
+
+      // Take a snapshot
+      takeContentSnapshot(canvas, contentSnapshot);
+
+      // Clear and draw pixelated grid
+      canvas.render(); // Clear the canvas
+      grid.drawPixelatedGridFromImage(contentSnapshot, side);
+    } else {
+      // Standard file-based media
+      grid.drawPixelatedGrid(mediaHandler.getProcessedMedia(), side);
+    }
+  }
+}
+
+// Helper to take a snapshot of the current screen content
+void takeContentSnapshot(Canvas canvas, PImage snapshot) {
+  loadPixels();
+  snapshot.loadPixels();
+
+  for (int y = 0; y < CANVAS_HEIGHT; y++) {
+    for (int x = 0; x < SINGLE_CANVAS_WIDTH; x++) {
+      int sourceX = x + canvas.x;
+      int sourceY = y + canvas.y;
+      int sourceIndex = sourceY * width + sourceX;
+      int targetIndex = y * SINGLE_CANVAS_WIDTH + x;
+
+      if (sourceIndex < pixels.length && targetIndex < snapshot.pixels.length) {
+        snapshot.pixels[targetIndex] = pixels[sourceIndex];
+      }
+    }
+  }
+
+  snapshot.updatePixels();
+}
+
+
+
+// Update videos and handle synchronized playback
+void updateVideosAndSync() {
   // Check for video updates
   leftMediaHandler.update();
   rightMediaHandler.update();
@@ -282,10 +344,19 @@ void draw() {
       syncVideoPlayback();
     }
   }
+}
 
-  // *** Send combined DMX data once per frame ***
+
+// Send DMX data
+void sendDMXData() {
   if (enableDMX && dmxSender != null) {
-    dmxSender.sendDMXData(dmxData);
+    try {
+      dmxSender.sendDMXData(dmxData);
+    }
+    catch (Exception e) {
+      // Handle general exception
+      log("DMX Send Error: " + e.getMessage());
+    }
   }
 }
 

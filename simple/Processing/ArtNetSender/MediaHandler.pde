@@ -38,63 +38,74 @@ class MediaHandler {
   }
 
   void updateVideoFrame() {
-    if (!enableP3D) {
-      // Create a PImage from the video frame
-      PImage videoFrame = createImage(loadedVideo.width, loadedVideo.height, RGB);
-      loadedVideo.loadPixels();
-      videoFrame.loadPixels();
-      arrayCopy(loadedVideo.pixels, videoFrame.pixels);
-      videoFrame.updatePixels();
-      loadedImage = videoFrame;
-    } else {
-      // Modify the updateVideoFrame() method in MediaHandler class for P3D compatibility
-      // Create a PImage from the video frame
-      if (loadedImage == null || loadedImage.width != loadedVideo.width || loadedImage.height != loadedVideo.height) {
-        loadedImage = createImage(loadedVideo.width, loadedVideo.height, RGB);
-      }
-      loadedImage.loadPixels();
-      arrayCopy(loadedVideo.pixels, loadedImage.pixels);
-      loadedImage.updatePixels();
+    if (loadedVideo == null) return;
+
+    // Create or reuse a PImage for the current frame
+    if (loadedImage == null || loadedImage.width != loadedVideo.width || loadedImage.height != loadedVideo.height) {
+      loadedImage = createImage(loadedVideo.width, loadedVideo.height, RGB);
     }
+
+    // Copy the video frame data
+    loadedVideo.loadPixels();
+    loadedImage.loadPixels();
+
+    // Use System.arrayCopy for efficiency when possible
+    if (loadedVideo.pixels.length == loadedImage.pixels.length) {
+      System.arraycopy(loadedVideo.pixels, 0, loadedImage.pixels, 0, loadedVideo.pixels.length);
+    } else {
+      // Fall back to manual copying if sizes differ
+      int minLength = min(loadedVideo.pixels.length, loadedImage.pixels.length);
+      for (int i = 0; i < minLength; i++) {
+        loadedImage.pixels[i] = loadedVideo.pixels[i];
+      }
+    }
+
+    loadedImage.updatePixels();
+
     // Process the media to fit the canvas
     processMedia();
   }
 
   void updateSyphonFrame(PGraphics syphonCanvas) {
-    if (syphonCanvas != null) {
-      // Set the flag indicating we're using Syphon
-      isSyphon = true;
-      isVideo = false;
+    if (syphonCanvas == null) return;
 
-      // Make sure syphon canvas pixels are loaded
-      syphonCanvas.loadPixels();
+    // Set the flags indicating we're using Syphon
+    isSyphon = true;
+    isVideo = false;
 
-      // Convert PGraphics to PImage for compatibility with existing code
-      if (loadedImage == null || loadedImage.width != syphonCanvas.width ||
-        loadedImage.height != syphonCanvas.height) {
-        loadedImage = createImage(syphonCanvas.width, syphonCanvas.height, RGB);
-      }
+    // Make sure syphon canvas pixels are loaded
+    syphonCanvas.loadPixels();
 
-      // Copy pixels from the Syphon canvas to our image
-      loadedImage.loadPixels();
+    // Create or resize loadedImage if needed
+    if (loadedImage == null || loadedImage.width != syphonCanvas.width ||
+      loadedImage.height != syphonCanvas.height) {
+      loadedImage = createImage(syphonCanvas.width, syphonCanvas.height, RGB);
+    }
 
-      // Safety check for arrays of the same length
+    // Copy pixels from the Syphon canvas to our image with fast array copy
+    loadedImage.loadPixels();
+
+    try {
+      // Attempt to use fast System.arrayCopy when possible
       if (syphonCanvas.pixels.length == loadedImage.pixels.length) {
-        arrayCopy(syphonCanvas.pixels, loadedImage.pixels);
+        System.arraycopy(syphonCanvas.pixels, 0, loadedImage.pixels, 0, syphonCanvas.pixels.length);
       } else {
+        // Fall back to manual copying if sizes differ
         log("Warning: Syphon canvas and image have different pixel array lengths");
-        // Copy manually if lengths differ
         int minLength = min(syphonCanvas.pixels.length, loadedImage.pixels.length);
         for (int i = 0; i < minLength; i++) {
           loadedImage.pixels[i] = syphonCanvas.pixels[i];
         }
       }
-
-      loadedImage.updatePixels();
-
-      // Process the image same way as for files
-      processMedia();
     }
+    catch (Exception e) {
+      log("Error copying Syphon pixels: " + e.getMessage());
+    }
+
+    loadedImage.updatePixels();
+
+    // Process the image same way as for files
+    processMedia();
   }
 
   // Method to enable/disable Syphon mode
@@ -108,8 +119,7 @@ class MediaHandler {
     isSyphon = enabled;
 
     if (enabled) {
-      // When enabling Syphon, make sure we indicate there's content
-      // by creating a blank image initially
+      // When enabling Syphon, create a blank image initially
       if (processedImage == null) {
         processedImage = createImage(canvas.width, canvas.height, RGB);
         processedImage.loadPixels();
@@ -126,6 +136,11 @@ class MediaHandler {
   }
 
   void loadMedia(String filePath) {
+    if (filePath == null || filePath.isEmpty()) {
+      log("Error: Invalid file path");
+      return;
+    }
+
     String fileExt = filePath.substring(filePath.lastIndexOf(".")).toLowerCase();
 
     // Check if it's an image file
@@ -145,17 +160,30 @@ class MediaHandler {
 
   void loadImageFile(String filePath) {
     isVideo = false;
+    isSyphon = false;
+
+    // Stop any existing video
     if (loadedVideo != null) {
       loadedVideo.stop();
       loadedVideo = null;
     }
-    loadedImage = loadImage(filePath);
-    processMedia();
+
+    try {
+      loadedImage = loadImage(filePath);
+      if (loadedImage == null) {
+        throw new Exception("Failed to load image");
+      }
+      processMedia();
+      log("Loaded image: " + filePath);
+    }
+    catch (Exception e) {
+      log("Error loading image: " + e.getMessage());
+    }
   }
 
-  // Modify the loadVideoFile() method for better P3D compatibility
   void loadVideoFile(String filePath) {
     isVideo = true;
+    isSyphon = false;
 
     // Stop any existing video
     if (loadedVideo != null) {
@@ -174,6 +202,7 @@ class MediaHandler {
     }
     catch (Exception e) {
       log("Error loading video: " + e.getMessage());
+      isVideo = false;
     }
   }
 
@@ -188,6 +217,7 @@ class MediaHandler {
     loadedImage = null;
     processedImage = null;
     isVideo = false;
+    isSyphon = false;
 
     log("Media cleared");
   }
@@ -208,7 +238,7 @@ class MediaHandler {
         scaleFactor = (float) canvasHeight / loadedImage.height;
       }
 
-      // Create a new image with the scaled dimensions
+      // Calculate the new dimensions
       int newWidth = (int) (loadedImage.width * scaleFactor);
       int newHeight = (int) (loadedImage.height * scaleFactor);
 
