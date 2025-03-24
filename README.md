@@ -21,6 +21,12 @@ A Processing application for real-time pixelation of media content (images, vide
 
 ![alt text](<_assets/Pixel Processing algorithms-3.png>)
 
+### About the hardware
+
+... TBD
+
+---
+
 ## Features
 
 ![alt text](<_assets/Our software.png>)
@@ -120,3 +126,5 @@ The application divides each canvas into an 8x8 grid, creating 64 cells per side
 - Verify IP address, subnet, and universe settings
 - Ensure receiving devices are properly configured
 - Check console for error messages
+
+---
