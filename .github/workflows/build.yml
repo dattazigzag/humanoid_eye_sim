@@ -21,19 +21,23 @@ jobs:
         
     - name: Download and install Processing
       run: |
+        # Download the Processing package
         wget "https://github.com/processing/processing4/releases/download/processing-1297-4.3.4/processing-4.3.4-linux-x64.tgz"
+        # Extract it to the current directory
         tar -xzf processing-4.3.4-linux-x64.tgz
+        # Make the processing-java command executable
         chmod +x processing-4.3.4/processing-java
         
     - name: Setup Processing sketchbook and preferences
       run: |
+        # Create the sketchbook libraries directory structure
         mkdir -p $HOME/sketchbook/libraries
         
-        # Create Processing preferences file to ensure it uses our sketchbook path
+        # Create Processing preferences file to set the sketchbook location
         mkdir -p $HOME/.processing
         echo "sketchbook.path=$HOME/sketchbook" > $HOME/.processing/preferences.txt
         
-        # Set environment variable for backup
+        # Also set as environment variable for scripts that might need it
         echo "PROCESSING_SKETCHBOOK=$HOME/sketchbook" >> $GITHUB_ENV
         
     - name: Install Processing libraries
@@ -46,38 +50,44 @@ jobs:
         unzip -q video.zip
         rm video.zip
         
-        # Drop library - special case, needs to be extracted correctly
+        # Drop library
         echo "Installing Drop library..."
         wget -q "https://transfluxus.github.io/drop/download/Drop-1.zip"
         mkdir -p Drop
         unzip -q Drop-1.zip -d Drop
-        # Fix library structure if needed by examining contents
+        # Fix library structure if needed
         if [ ! -d "Drop/library" ]; then
-          # If the zip already has a 'Drop' directory within it, we need to fix the structure
           if [ -d "Drop/Drop" ]; then
             mv Drop/Drop/* Drop/
             rmdir Drop/Drop
           fi
-          # Make sure there's a library directory containing JARs
+          # Create library directory and move JARs if needed
           if [ ! -d "Drop/library" ]; then
             mkdir -p Drop/library
             mv Drop/*.jar Drop/library/ 2>/dev/null || true
           fi
         fi
         
-        # ArtNet library - custom setup for bildspur version
+        # ArtNet library - using the CORRECT URL provided
         echo "Installing ArtNet library..."
+        # Create a directory for the library with proper naming
+        mkdir -p ch.bildspur.artnet/library
+        # Download using the correct URL
         wget -q "https://github.com/cansik/artnet4j/releases/download/0.6.2/artnet4j.zip"
-        # Create proper directory structure for the library
-        mkdir -p ch.bildspur.artnet
-        unzip -q ch.bildspur.artnet.zip -d ch.bildspur.artnet
+        # Unzip directly to the library directory
+        unzip -q artnet4j.zip -d ch.bildspur.artnet/library/
         
-        # Check if library has the correct structure, fix if needed
-        if [ -d "ch.bildspur.artnet/ch.bildspur.artnet" ]; then
-          # If inside is another dir with same name, move contents up one level
-          mv ch.bildspur.artnet/ch.bildspur.artnet/* ch.bildspur.artnet/
-          rmdir ch.bildspur.artnet/ch.bildspur.artnet
-        fi
+        # Create a proper library.properties file for Processing to recognize it
+        cat > ch.bildspur.artnet/library.properties << EOF
+        name=ArtNet (Bildspur)
+        category=Data
+        authorList=cansik
+        url=https://github.com/cansik/artnet4j
+        sentence=ArtNet library for Processing
+        paragraph=Allows sending DMX data over ArtNet protocol
+        version=0.6.2
+        prettyVersion=0.6.2
+        EOF
         
         # Syphon library
         echo "Installing Syphon library..."
@@ -90,7 +100,7 @@ jobs:
         wget -q "https://github.com/sojamo/controlp5/releases/download/v2.2.5/controlP5-2.2.5.zip"
         mkdir -p controlP5
         unzip -q controlP5-2.2.5.zip -d controlP5
-        # Check if the structure needs fixing
+        # Fix structure if needed
         if [ -d "controlP5/controlP5-2.2.5" ]; then
           mv controlP5/controlP5-2.2.5/* controlP5/
           rmdir controlP5/controlP5-2.2.5
@@ -108,6 +118,7 @@ jobs:
         
     - name: Set up virtual display for headless operation
       run: |
+        # Start a virtual X server for headless operation
         Xvfb :1 -screen 0 1024x768x24 &
         echo "DISPLAY=:1" >> $GITHUB_ENV
         
@@ -128,8 +139,8 @@ jobs:
         echo "Exported binaries:"
         find $GITHUB_WORKSPACE/output -type f -not -path "*/\.*" | sort
         
-    # - name: Upload macOS Intel binary as artifact
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: artnet-sender-macosx-intel
-    #     path: ${{ github.workspace }}/output/macosx-intel
+    - name: Upload macOS Intel binary as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: artnet-sender-macosx-intel
+        path: ${{ github.workspace }}/output/macosx-intel
