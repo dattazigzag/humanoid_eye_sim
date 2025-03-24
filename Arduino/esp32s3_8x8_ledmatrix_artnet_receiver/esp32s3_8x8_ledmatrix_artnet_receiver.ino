@@ -62,6 +62,7 @@ void showWiFiConnected() {
 const char *ssid = ":)";
 const char *pwd = "jEmx4vpR";
 const IPAddress ip(192, 168, 1, 201);
+// const IPAddress ip(192, 168, 1, 202);
 const IPAddress gateway(192, 168, 1, 1);
 const IPAddress subnet_mask(255, 255, 255, 0);
 
@@ -105,27 +106,29 @@ void print8x8Data(const uint8_t *data) {
   Serial.println("--------------------");
 }
 
-void updateLEDsFromDMX(const uint8_t *data) {
-  // Update all LEDs based on DMX data
-  pixels.clear();
-  for (int i = 0; i < LED_COUNT; i++) {
-    // Calculate DMX data index for this LED (3 channels per LED: R,G,B)
-    int dmxIndex = i * 3;
-    // Get the RGB values
-    uint8_t red = data[dmxIndex];
-    uint8_t green = data[dmxIndex + 1];
-    uint8_t blue = data[dmxIndex + 2];
-    // Calculate the actual LED position in the strip
-    // Based on the LED layout in your comment
-    int row = i / 8;
-    int col = i % 8;
-    int ledPosition = (7 - row) * 8 + (7 - col);
-    // Set the pixel color
-    pixels.setPixelColor(ledPosition, pixels.Color(red, green, blue));
-  }
-  // Show the updated pixels
-  pixels.show();
-}
+// void updateLEDsFromDMX(const uint8_t *data) {
+//   // Update all LEDs based on DMX data
+//   pixels.clear();
+//   for (int i = 0; i < LED_COUNT; i++) {
+//     // Calculate DMX data index for this LED (3 channels per LED: R,G,B)
+//     int dmxIndex = i * 3;
+//     // int dmxIndex = (i * 3) + 192;
+    
+//     // Get the RGB values
+//     uint8_t red = data[dmxIndex];
+//     uint8_t green = data[dmxIndex + 1];
+//     uint8_t blue = data[dmxIndex + 2];
+//     // Calculate the actual LED position in the strip
+//     // Based on the LED layout in your comment
+//     int row = i / 8;
+//     int col = i % 8;
+//     int ledPosition = (7 - row) * 8 + (7 - col);
+//     // Set the pixel color
+//     pixels.setPixelColor(ledPosition, pixels.Color(red, green, blue));
+//   }
+//   // Show the updated pixels
+//   pixels.show();
+// }
 
 // void artnetCallback(const uint8_t *data, uint16_t size, const ArtDmxMetadata &metadata, const ArtNetRemoteInfo &remote) {
 //   // DEBUG print artnet data
@@ -194,7 +197,10 @@ void setup() {
     pixels.clear();
     for (int i = 0; i < LED_COUNT; i++) {
       // Calculate DMX data index for this LED (3 channels per LED: R,G,B)
+      
       int dmxIndex = i * 3;
+      // int dmxIndex = (i * 3) + 192;
+      
       // Get the RGB values
       uint8_t red = data[dmxIndex];
       uint8_t green = data[dmxIndex + 1];

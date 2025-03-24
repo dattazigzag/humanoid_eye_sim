@@ -462,7 +462,7 @@ void toggleRightSyphon(boolean enable) {
     // Look for matching server name
     for (int i = 0; i < servers.length; i++) {
       String sName = (String)servers[i].get("ServerName");
-      if (sName.equals(leftSyphonServer)) {
+      if (sName.equals(rightSyphonServer)) {
         appName = (String)servers[i].get("AppName");
         log("Found right Syphon server from app: " + appName);
         break;
@@ -471,8 +471,8 @@ void toggleRightSyphon(boolean enable) {
 
     // Create Syphon client with found app name
     if (rightSyphonClient == null) {
-      rightSyphonClient = new SyphonClient(this, appName, leftSyphonServer);
-      log("Created right Syphon client - looking for '" + appName + ":" + leftSyphonServer + "'");
+      rightSyphonClient = new SyphonClient(this, appName, rightSyphonServer);
+      log("Created right Syphon client - looking for '" + appName + ":" + rightSyphonServer + "'");
     }
 
     // Initialize syphon canvas if needed
