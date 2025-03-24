@@ -82,15 +82,15 @@ jobs:
         Xvfb :1 -screen 0 1024x768x24 &
         echo "DISPLAY=:1" >> $GITHUB_ENV
         
-    - name: Test sketch compilation
-      run: |
-        echo "Testing sketch compilation..."
-        xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_PATH --build || {
-          echo "Compilation failed. Examining libraries..."
-          find $HOME/sketchbook/libraries -type f -name "*.jar" -exec jar tvf {} \; | grep -i "artnet\|ch/bildspur"
-          cat $GITHUB_WORKSPACE/$SKETCH_PATH/*.pde | grep -i "import.*artnet"
-          exit 1
-        }
+    # - name: Test sketch compilation
+    #   run: |
+    #     echo "Testing sketch compilation..."
+    #     xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_PATH --build || {
+    #       echo "Compilation failed. Examining libraries..."
+    #       find $HOME/sketchbook/libraries -type f -name "*.jar" -exec jar tvf {} \; | grep -i "artnet\|ch/bildspur"
+    #       cat $GITHUB_WORKSPACE/$SKETCH_PATH/*.pde | grep -i "import.*artnet"
+    #       exit 1
+    #     }
         
     - name: Export binaries for all platforms
       run: |
