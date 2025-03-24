@@ -42,7 +42,7 @@ jobs:
         unzip -o Drop-1.zip -d $HOME/sketchbook/libraries/Drop/
         
         # ArtNet library (Bildspur version, NOT the original artnet4j)
-        wget https://github.com/cansik/artnet4j/releases/download/v0.6.1/ch.bildspur.artnet.zip
+        https://github.com/cansik/artnet4j/releases/download/0.6.2/artnet4j.zip
         mkdir -p $HOME/sketchbook/libraries/artnet
         unzip -o ch.bildspur.artnet.zip -d $HOME/sketchbook/libraries/artnet/
         
