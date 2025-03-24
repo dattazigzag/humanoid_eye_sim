@@ -59,12 +59,14 @@ void showWiFiConnected() {
 }
 
 // WiFi& Artnet stuff
-const char *ssid = ":)";
-const char *pwd = "jEmx4vpR";
-const IPAddress ip(192, 168, 1, 201);
-// const IPAddress ip(192, 168, 1, 202);
-const IPAddress gateway(192, 168, 1, 1);
-const IPAddress subnet_mask(255, 255, 255, 0);
+const char *ssid = "YOUR_WIFI_SSID";
+const char *pwd = "YOUR_WIFI_PWD";
+
+const IPAddress ip(192, 168, 1, 201); // Adjust based on your router's DNS Settings
+// const IPAddress ip(192, 168, 1, 202); // Adjust based on your router's DNS Settings; **but give the send setup a diff IP
+
+const IPAddress gateway(192, 168, 1, 1); // Adjust based on your router's DNS Settings
+const IPAddress subnet_mask(255, 255, 255, 0);  // Adjust based on your router's DNS Settings
 
 ArtnetWiFiReceiver artnet;
 
@@ -72,80 +74,6 @@ uint16_t universe0 = 0;  // 0 - 32767
 uint8_t net = 0;         // 0 - 127
 uint8_t subnet = 0;      // 0 - 15
 
-void print8x8Data(const uint8_t *data) {
-  // Print 8x8 matrix visualization
-  Serial.println("\n8x8 LED Matrix Data:");
-  Serial.println("--------------------");
-
-  for (int row = 0; row < 8; row++) {
-    for (int col = 0; col < 8; col++) {
-      // Calculate the LED index (0-63)
-      int ledIndex = row * 8 + col;
-
-      // Calculate the position in the DMX data array
-      // Each LED uses 3 channels (RGB)
-      int dataIndex = ledIndex * 3;
-
-      // Get RGB values
-      uint8_t red = data[dataIndex];
-      uint8_t green = data[dataIndex + 1];
-      uint8_t blue = data[dataIndex + 2];
-
-      // Print LED data with proper formatting
-      Serial.print("[");
-      Serial.print(red);
-      Serial.print(",");
-      Serial.print(green);
-      Serial.print(",");
-      Serial.print(blue);
-      Serial.print("] ");
-    }
-    // New line after each row
-    Serial.println();
-  }
-  Serial.println("--------------------");
-}
-
-// void updateLEDsFromDMX(const uint8_t *data) {
-//   // Update all LEDs based on DMX data
-//   pixels.clear();
-//   for (int i = 0; i < LED_COUNT; i++) {
-//     // Calculate DMX data index for this LED (3 channels per LED: R,G,B)
-//     int dmxIndex = i * 3;
-//     // int dmxIndex = (i * 3) + 192;
-    
-//     // Get the RGB values
-//     uint8_t red = data[dmxIndex];
-//     uint8_t green = data[dmxIndex + 1];
-//     uint8_t blue = data[dmxIndex + 2];
-//     // Calculate the actual LED position in the strip
-//     // Based on the LED layout in your comment
-//     int row = i / 8;
-//     int col = i % 8;
-//     int ledPosition = (7 - row) * 8 + (7 - col);
-//     // Set the pixel color
-//     pixels.setPixelColor(ledPosition, pixels.Color(red, green, blue));
-//   }
-//   // Show the updated pixels
-//   pixels.show();
-// }
-
-// void artnetCallback(const uint8_t *data, uint16_t size, const ArtDmxMetadata &metadata, const ArtNetRemoteInfo &remote) {
-//   // DEBUG print artnet data
-//   // Serial.print("lambda : artnet data from ");
-//   // Serial.print(remote.ip);
-//   // Serial.print(":");
-//   // Serial.print(remote.port);
-//   // Serial.print(", universe = ");
-//   // Serial.print(universe0);
-//   // Serial.print(", size = ");
-//   // Serial.print(size);
-//   // Serial.println();
-//   // print8x8Data(data);
-
-//   // Update the LEDs with the received DMX data
-//   updateLEDsFromDMX(data);
-// }
 
 void setup() {
   initLEDs();
@@ -176,11 +104,9 @@ void setup() {
 
   artnet.begin();
 
-  // Option1
-  // artnet.subscribeArtDmxUniverse(net, subnet, universe0, artnetCallback);
-
   // Option2
   artnet.subscribeArtDmxUniverse(universe0, [&](const uint8_t *data, uint16_t size, const ArtDmxMetadata &metadata, const ArtNetRemoteInfo &remote) {
+
     // // DEBUG print artnet data
     // Serial.print("lambda : artnet data from ");
     // Serial.print(remote.ip);
@@ -198,8 +124,8 @@ void setup() {
     for (int i = 0; i < LED_COUNT; i++) {
       // Calculate DMX data index for this LED (3 channels per LED: R,G,B)
       
-      int dmxIndex = i * 3;
-      // int dmxIndex = (i * 3) + 192;
+      int dmxIndex = i * 3;  // For the Left Eye (1st Matrix)
+      // int dmxIndex = (i * 3) + 192;  // For the Right Eye (2nd Matrix)
       
       // Get the RGB values
       uint8_t red = data[dmxIndex];
