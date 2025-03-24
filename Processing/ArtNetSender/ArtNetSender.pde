@@ -67,6 +67,10 @@ PGraphics rightSyphonCanvas;
 boolean leftSyphonEnabled = false;
 boolean rightSyphonEnabled = false;
 
+// Global syphon server names
+String leftSyphonServer = "LeftEye";
+String rightSyphonServer = "RightEye";
+
 // Snapshot images for pixelation
 PImage leftContentSnapshot;
 PImage rightContentSnapshot;
@@ -409,22 +413,21 @@ void toggleLeftSyphon(boolean enable) {
     // Check available servers first
     HashMap[] servers = SyphonClient.listServers();
     String appName = "";
-    String serverName = "LeftEye";
 
     // Look for matching server name
     for (int i = 0; i < servers.length; i++) {
       String sName = (String)servers[i].get("ServerName");
-      if (sName.equals("LeftEye")) {
+      if (sName.equals(leftSyphonServer)) {
         appName = (String)servers[i].get("AppName");
-        log("Found LeftEye server from app: " + appName);
+        log("Found left Syphon server from app: " + appName);
         break;
       }
     }
 
     // Create Syphon client with found app name
     if (leftSyphonClient == null) {
-      leftSyphonClient = new SyphonClient(this, appName, "LeftEye");
-      log("Created left Syphon client - looking for '" + appName + ":" + serverName + "'");
+      leftSyphonClient = new SyphonClient(this, appName, leftSyphonServer);
+      log("Created left Syphon client - looking for '" + appName + ":" + leftSyphonServer + "'");
     }
 
     // Initialize syphon canvas if needed
@@ -454,22 +457,21 @@ void toggleRightSyphon(boolean enable) {
     // Check available servers first
     HashMap[] servers = SyphonClient.listServers();
     String appName = "";
-    String serverName = "RightEye";
 
     // Look for matching server name
     for (int i = 0; i < servers.length; i++) {
       String sName = (String)servers[i].get("ServerName");
-      if (sName.equals("RightEye")) {
+      if (sName.equals(leftSyphonServer)) {
         appName = (String)servers[i].get("AppName");
-        log("Found RightEye server from app: " + appName);
+        log("Found right Syphon server from app: " + appName);
         break;
       }
     }
 
     // Create Syphon client with found app name
     if (rightSyphonClient == null) {
-      rightSyphonClient = new SyphonClient(this, appName, "RightEye");
-      log("Created right Syphon client - looking for '" + appName + ":" + serverName + "'");
+      rightSyphonClient = new SyphonClient(this, appName, leftSyphonServer);
+      log("Created right Syphon client - looking for '" + appName + ":" + leftSyphonServer + "'");
     }
 
     // Initialize syphon canvas if needed
@@ -519,7 +521,7 @@ void keyPressed() {
     rightGrid.toggleGrid();
     // Update the UI toggle to match the grid state
     ui.gridToggle.setValue(leftGrid.isEnabled());
-    log("Grid: " + (leftGrid.isEnabled() ? "Enabled" : "Disabled"));
+    //log("Grid: " + (leftGrid.isEnabled() ? "Enabled" : "Disabled"));
   } else if (key == 'p' || key == 'P') {
     leftGrid.cyclePixelationAlgorithm();
     rightGrid.cyclePixelationAlgorithm();
