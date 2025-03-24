@@ -23,7 +23,9 @@ A Processing application for real-time pixelation of media content (images, vide
 
 ### About the hardware
 
-... TBD
+![HW](<_assets/Hardware ....png>)
+
+[More in details here](Arduino/README.md)
 
 ---
 
@@ -46,7 +48,7 @@ A Processing application for real-time pixelation of media content (images, vide
 - **ArtNet DMX Output**: Send color data to DMX-controlled lighting fixtures:
   - Broadcast or unicast mode (to a Target IP of a LED matrix controller)
   - Configurable universe and subnet
-  - [You can find the Arduino / ESP32 project here for teh HW code ..](simple/Arduino/esp32s3_8x8_ledmatrix_artnet_receiver)
+  - [You can find the Arduino / ESP32 project here for the HW code ..](simple/Arduino/esp32s3_8x8_ledmatrix_artnet_receiver)
 - **User-Friendly Interface**
   - Toggle grid and effects with keyboard shortcuts
   - Interactive console with status updates
