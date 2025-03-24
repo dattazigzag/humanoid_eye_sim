@@ -1,14 +1,14 @@
-name: Processing Build and Export
+name: ArtNetSender Build and Export
 
 on:
-  workflow_dispatch:  # Manual trigger option
+  workflow_dispatch:  # Enables manual triggering from the GitHub UI
 
 jobs:
   build:
     runs-on: ubuntu-latest
     
     env:
-      SKETCH_NAME: "your_sketch"  # Replace with your actual sketch name
+      SKETCH_PATH: "Processing/ArtNetSender"
 
     steps:
     - name: Checkout repository
@@ -21,12 +21,14 @@ jobs:
         
     - name: Download and install Processing
       run: |
-        # Download Processing 4.3.4 from the specified URL
+        # Download Processing 4.3.4
         wget https://github.com/processing/processing4/releases/download/processing-1297-4.3.4/processing-4.3.4-linux-x64.tgz
         # Extract the archive
         tar -xzf processing-4.3.4-linux-x64.tgz
         # Make Processing executable
         chmod +x processing-4.3.4/processing-java
+        # Print version information
+        ./processing-4.3.4/processing-java --help
         
     - name: Setup Processing sketchbook
       run: |
@@ -70,28 +72,21 @@ jobs:
         
     - name: Export binaries for all platforms
       run: |
-        # Export for Linux (64-bit)
-        echo "Exporting for Linux..."
-        xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_NAME --export --platform=linux --bits=64
+        # Create output directories
+        mkdir -p $GITHUB_WORKSPACE/output
         
-        # Export for Windows (64-bit)
-        echo "Exporting for Windows..."
-        xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_NAME --export --platform=windows --bits=64
+        # Export for macOS (Intel)
+        echo "Exporting for macOS (Intel)..."
+        xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_PATH --export --variant=macosx-x86_64 --output=$GITHUB_WORKSPACE/output/macosx-intel
         
-        # Export for macOS
-        echo "Exporting for macOS..."
-        xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_NAME --export --platform=macosx
-        
-    - name: List generated files
+    - name: List exported files
       run: |
         echo "Exported binaries:"
-        find $GITHUB_WORKSPACE/$SKETCH_NAME -type f -path "*/application.*" -o -name "*.exe" -o -name "*.app" | sort
+        find $GITHUB_WORKSPACE/output -type f | sort
         
-    - name: Upload binaries as artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: processing-binaries
-        path: |
-          ${{ github.workspace }}/${{ env.SKETCH_NAME }}/application.*
-          ${{ github.workspace }}/${{ env.SKETCH_NAME }}/*.exe
-          ${{ github.workspace }}/${{ env.SKETCH_NAME }}/*.app
+    # - name: Upload macOS Intel binary as artifact
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #     name: artnet-sender-macosx-intel
+    #     path: ${{ github.workspace }}/output/macosx-intel
+      
