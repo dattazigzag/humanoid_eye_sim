@@ -25,85 +25,108 @@ jobs:
         tar -xzf processing-4.3.4-linux-x64.tgz
         chmod +x processing-4.3.4/processing-java
         
-    - name: Setup Processing sketchbook
+    - name: Setup Processing sketchbook and preferences
       run: |
         mkdir -p $HOME/sketchbook/libraries
+        
+        # Create Processing preferences file to ensure it uses our sketchbook path
+        mkdir -p $HOME/.processing
+        echo "sketchbook.path=$HOME/sketchbook" > $HOME/.processing/preferences.txt
+        
+        # Set environment variable for backup
         echo "PROCESSING_SKETCHBOOK=$HOME/sketchbook" >> $GITHUB_ENV
         
     - name: Install Processing libraries
       run: |
+        cd $HOME/sketchbook/libraries
+        
         # Video library
-        wget "https://github.com/processing/processing-video/releases/download/latest/video.zip"
-        unzip -o video.zip -d $HOME/sketchbook/libraries/
+        echo "Installing Video library..."
+        wget -q "https://github.com/processing/processing-video/releases/download/latest/video.zip"
+        unzip -q video.zip
+        rm video.zip
         
-        # Drop library
-        wget "https://transfluxus.github.io/drop/download/Drop-1.zip"
-        mkdir -p $HOME/sketchbook/libraries/Drop
-        unzip -o Drop-1.zip -d $HOME/sketchbook/libraries/Drop/
+        # Drop library - special case, needs to be extracted correctly
+        echo "Installing Drop library..."
+        wget -q "https://transfluxus.github.io/drop/download/Drop-1.zip"
+        mkdir -p Drop
+        unzip -q Drop-1.zip -d Drop
+        # Fix library structure if needed by examining contents
+        if [ ! -d "Drop/library" ]; then
+          # If the zip already has a 'Drop' directory within it, we need to fix the structure
+          if [ -d "Drop/Drop" ]; then
+            mv Drop/Drop/* Drop/
+            rmdir Drop/Drop
+          fi
+          # Make sure there's a library directory containing JARs
+          if [ ! -d "Drop/library" ]; then
+            mkdir -p Drop/library
+            mv Drop/*.jar Drop/library/ 2>/dev/null || true
+          fi
+        fi
         
-        # ArtNet library - using the Processing-compatible version
-        echo "Downloading ArtNet library..."
-        # First try the Bildspur version that provides ch.bildspur.artnet package
-        wget "https://github.com/cansik/artnet4j/releases/download/v0.6.1/ch.bildspur.artnet.zip" || echo "Couldn't download Bildspur version, trying alternative"
+        # ArtNet library - custom setup for bildspur version
+        echo "Installing ArtNet library..."
+        wget -q "https://github.com/cansik/artnet4j/releases/download/v0.6.1/ch.bildspur.artnet.zip"
+        # Create proper directory structure for the library
+        mkdir -p ch.bildspur.artnet
+        unzip -q ch.bildspur.artnet.zip -d ch.bildspur.artnet
         
-        if [ -f "ch.bildspur.artnet.zip" ]; then
-          mkdir -p $HOME/sketchbook/libraries/artnet
-          unzip -o ch.bildspur.artnet.zip -d $HOME/sketchbook/libraries/artnet/
-        else
-          # Fallback to the original artnet4j and properly format it for Processing
-          wget "https://github.com/cansik/artnet4j/releases/download/0.6.2/artnet4j.zip"
-          mkdir -p $HOME/sketchbook/libraries/artnet/library
-          unzip -o artnet4j.zip -d $HOME/sketchbook/libraries/artnet/library/
-          # Create the library.properties file required by Processing
-          echo "name=ArtNet" > $HOME/sketchbook/libraries/artnet/library.properties
-          echo "category=Data" >> $HOME/sketchbook/libraries/artnet/library.properties
-          echo "authorList=cansik" >> $HOME/sketchbook/libraries/artnet/library.properties
+        # Check if library has the correct structure, fix if needed
+        if [ -d "ch.bildspur.artnet/ch.bildspur.artnet" ]; then
+          # If inside is another dir with same name, move contents up one level
+          mv ch.bildspur.artnet/ch.bildspur.artnet/* ch.bildspur.artnet/
+          rmdir ch.bildspur.artnet/ch.bildspur.artnet
         fi
         
         # Syphon library
-        wget "https://github.com/Syphon/Processing/releases/download/latest/Syphon.zip"
-        unzip -o Syphon.zip -d $HOME/sketchbook/libraries/
+        echo "Installing Syphon library..."
+        wget -q "https://github.com/Syphon/Processing/releases/download/latest/Syphon.zip"
+        unzip -q Syphon.zip
+        rm Syphon.zip
         
         # ControlP5 library
-        wget "https://github.com/sojamo/controlp5/releases/download/v2.2.5/controlP5-2.2.5.zip"
-        mkdir -p $HOME/sketchbook/libraries/controlP5
-        unzip -o controlP5-2.2.5.zip -d $HOME/sketchbook/libraries/controlP5/
+        echo "Installing ControlP5 library..."
+        wget -q "https://github.com/sojamo/controlp5/releases/download/v2.2.5/controlP5-2.2.5.zip"
+        mkdir -p controlP5
+        unzip -q controlP5-2.2.5.zip -d controlP5
+        # Check if the structure needs fixing
+        if [ -d "controlP5/controlP5-2.2.5" ]; then
+          mv controlP5/controlP5-2.2.5/* controlP5/
+          rmdir controlP5/controlP5-2.2.5
+        fi
         
-        # List installed libraries to verify
-        echo "Installed libraries:"
-        find $HOME/sketchbook/libraries -maxdepth 3 -type d -not -path "*/\.*" | sort
-        
-        # List JAR files to verify library contents
-        echo "Library JAR files:"
-        find $HOME/sketchbook/libraries -name "*.jar" | sort
+        # Print detailed information about installed libraries
+        echo "===== LIBRARY STRUCTURE ====="
+        ls -la
+        echo ""
+        echo "===== DETAILED LIBRARY CONTENTS ====="
+        find . -type d | sort
+        echo ""
+        echo "===== JAR FILES ====="
+        find . -name "*.jar" | sort
         
     - name: Set up virtual display for headless operation
       run: |
         Xvfb :1 -screen 0 1024x768x24 &
         echo "DISPLAY=:1" >> $GITHUB_ENV
         
-    # - name: Test sketch compilation
-    #   run: |
-    #     echo "Testing sketch compilation..."
-    #     xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_PATH --build || {
-    #       echo "Compilation failed. Examining libraries..."
-    #       find $HOME/sketchbook/libraries -type f -name "*.jar" -exec jar tvf {} \; | grep -i "artnet\|ch/bildspur"
-    #       cat $GITHUB_WORKSPACE/$SKETCH_PATH/*.pde | grep -i "import.*artnet"
-    #       exit 1
-    #     }
+    - name: Run sketch as test before export
+      run: |
+        echo "Testing sketch compilation..."
+        xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_PATH --build
         
-    - name: Export binaries for all platforms
+    - name: Export binaries for macOS (Intel)
       run: |
         mkdir -p $GITHUB_WORKSPACE/output
         
-        # Export for macOS (Intel)
         echo "Exporting for macOS (Intel)..."
         xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_PATH --export --variant=macosx-x86_64 --output=$GITHUB_WORKSPACE/output/macosx-intel
         
     - name: List exported files
       run: |
         echo "Exported binaries:"
-        find $GITHUB_WORKSPACE/output -type f | sort
+        find $GITHUB_WORKSPACE/output -type f -not -path "*/\.*" | sort
         
     # - name: Upload macOS Intel binary as artifact
     #   uses: actions/upload-artifact@v3
