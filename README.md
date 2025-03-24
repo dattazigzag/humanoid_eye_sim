@@ -1,8 +1,9 @@
 # ArtNet DMX Sender for 2*8x8 addreassable LED matrices - for 🤖 👀
 
-A Processing-based application for real-time pixelation of media content (images, videos, and Syphon streams) with ArtNet DMX output capabilities. Designed for controlling LED installations, pixel mapping projects, and creating visual effects for performances and installations.
+A Processing application for real-time pixelation of media content (images, videos, and Syphon streams) with ArtNet DMX output capabilities. 
+> Designed to control 8x8 LED Matrix displays, primarily for humanoid eye animations, but also suitable for other 8x8 pixel mapping projects and visual effects creation.
 
-![ArtNet DMX Pixelator](https://via.placeholder.com/800x450)
+![alt text](<_assets/Screenshot 2025-03-24 at 11.16.21.png>)
 
 ---
 
@@ -72,6 +73,8 @@ A Processing-based application for real-time pixelation of media content (images
 - **Images/Videos**: Click "Select Left Eye File" or "Select Right Eye File" buttons
 - **Drag and Drop**: Drag media files directly onto either canvas
 - **Syphon**: Toggle the SYPHON buttons to capture from other applications
+
+![alt text](_assets/software.gif)
 
 ### Controls
 
