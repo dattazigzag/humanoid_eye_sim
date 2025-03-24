@@ -21,70 +21,73 @@ jobs:
         
     - name: Download and install Processing
       run: |
-        # Download the Processing package
         wget "https://github.com/processing/processing4/releases/download/processing-1297-4.3.4/processing-4.3.4-linux-x64.tgz"
-        # Extract it to the current directory
         tar -xzf processing-4.3.4-linux-x64.tgz
-        # Make the processing-java command executable
         chmod +x processing-4.3.4/processing-java
         
-    - name: Setup Processing sketchbook and preferences
+    - name: Setup Processing sketchbook
       run: |
-        # Create the sketchbook libraries directory structure
+        # Create the sketchbook and libraries directories
         mkdir -p $HOME/sketchbook/libraries
         
-        # Create Processing preferences file to set the sketchbook location
+        # Create Processing preferences file
         mkdir -p $HOME/.processing
         echo "sketchbook.path=$HOME/sketchbook" > $HOME/.processing/preferences.txt
         
-        # Also set as environment variable for scripts that might need it
+        # Set environment variable
         echo "PROCESSING_SKETCHBOOK=$HOME/sketchbook" >> $GITHUB_ENV
         
-    - name: Install Processing libraries
+    - name: Install Processing libraries (preserving full folder structures)
       run: |
+        # Change to the libraries directory
         cd $HOME/sketchbook/libraries
         
-        # Video library
+        # Video library - extract directly to libraries folder
         echo "Installing Video library..."
         wget -q "https://github.com/processing/processing-video/releases/download/latest/video.zip"
         unzip -q video.zip
-        rm video.zip
         
-        # Drop library
+        # Drop library - special case, may need manual handling
         echo "Installing Drop library..."
         wget -q "https://transfluxus.github.io/drop/download/Drop-1.zip"
-        mkdir -p Drop
-        unzip -q Drop-1.zip -d Drop
-        # Fix library structure if needed
-        if [ ! -d "Drop/library" ]; then
-          if [ -d "Drop/Drop" ]; then
-            mv Drop/Drop/* Drop/
-            rmdir Drop/Drop
-          fi
-          # Create library directory and move JARs if needed
-          if [ ! -d "Drop/library" ]; then
-            mkdir -p Drop/library
-            mv Drop/*.jar Drop/library/ 2>/dev/null || true
-          fi
+        # First try extracting directly
+        unzip -q Drop-1.zip
+        # Check if Drop folder exists, if not, create it and move files there
+        if [ ! -d "Drop" ]; then
+          mkdir -p Drop/library
+          # Look for JAR files from the extraction and move them
+          find . -maxdepth 1 -name "Drop*.jar" -exec mv {} Drop/library/ \;
+          # Create a basic library.properties file
+          cat > Drop/library.properties << EOF
+          name=Drop
+          category=Data
+          authorList=Ramin Soleymani
+          url=https://github.com/transfluxus/drop
+          sentence=Drag and Drop for Processing
+          paragraph=Library for drag and drop support
+          version=1.0
+          prettyVersion=1.0
+          EOF
         fi
         
-        # ArtNet library - using the CORRECT URL provided
+        # ArtNet library - needs special handling
         echo "Installing ArtNet library..."
-        # Create a directory for the library with proper naming
-        mkdir -p ch.bildspur.artnet/library
-        # Download using the correct URL
         wget -q "https://github.com/cansik/artnet4j/releases/download/0.6.2/artnet4j.zip"
-        # Unzip directly to the library directory
-        unzip -q artnet4j.zip -d ch.bildspur.artnet/library/
         
-        # Create a proper library.properties file for Processing to recognize it
-        cat > ch.bildspur.artnet/library.properties << EOF
-        name=ArtNet (Bildspur)
+        # Create a proper Processing library structure for ArtNet
+        mkdir -p "ch.bildspur.artnet/library"
+        # Extract the JAR files into the library folder
+        unzip -q artnet4j.zip -d /tmp/artnet-temp
+        # Move JAR files to the library folder
+        mv /tmp/artnet-temp/*.jar "ch.bildspur.artnet/library/"
+        # Create necessary library.properties file
+        cat > "ch.bildspur.artnet/library.properties" << EOF
+        name=ArtNet
         category=Data
         authorList=cansik
         url=https://github.com/cansik/artnet4j
-        sentence=ArtNet library for Processing
-        paragraph=Allows sending DMX data over ArtNet protocol
+        sentence=ArtNet DMX library for Processing
+        paragraph=Allows communication over the ArtNet protocol for DMX control
         version=0.6.2
         prettyVersion=0.6.2
         EOF
@@ -93,39 +96,74 @@ jobs:
         echo "Installing Syphon library..."
         wget -q "https://github.com/Syphon/Processing/releases/download/latest/Syphon.zip"
         unzip -q Syphon.zip
-        rm Syphon.zip
         
         # ControlP5 library
         echo "Installing ControlP5 library..."
         wget -q "https://github.com/sojamo/controlp5/releases/download/v2.2.5/controlP5-2.2.5.zip"
-        mkdir -p controlP5
-        unzip -q controlP5-2.2.5.zip -d controlP5
-        # Fix structure if needed
-        if [ -d "controlP5/controlP5-2.2.5" ]; then
-          mv controlP5/controlP5-2.2.5/* controlP5/
-          rmdir controlP5/controlP5-2.2.5
+        # Try direct extraction first
+        unzip -q controlP5-2.2.5.zip
+        # Check if it created a controlP5 directory
+        if [ ! -d "controlP5" ]; then
+          # It might have created a directory with the version number
+          if [ -d "controlP5-2.2.5" ]; then
+            mv controlP5-2.2.5 controlP5
+          else
+            # As a fallback, create the structure manually
+            mkdir -p controlP5/library
+            find . -maxdepth 1 -name "controlP5*.jar" -exec mv {} controlP5/library/ \;
+            # Create library.properties
+            cat > controlP5/library.properties << EOF
+            name=ControlP5
+            category=GUI
+            authorList=Andreas Schlegel
+            url=http://www.sojamo.de/libraries/controlP5/
+            sentence=GUI controls for Processing
+            paragraph=ControlP5 is a GUI library for Processing that provides a wide range of controllers
+            version=2.2.5
+            prettyVersion=2.2.5
+            EOF
+          fi
         fi
         
-        # Print detailed information about installed libraries
-        echo "===== LIBRARY STRUCTURE ====="
-        ls -la
-        echo ""
-        echo "===== DETAILED LIBRARY CONTENTS ====="
+        # Display detailed directory structure for debugging
+        echo "===== LIBRARY DIRECTORY STRUCTURE ====="
         find . -type d | sort
-        echo ""
-        echo "===== JAR FILES ====="
-        find . -name "*.jar" | sort
+        
+        echo "===== LIBRARY FILES ====="
+        find . -type f | grep -E "\.(jar|properties)$" | sort
+        
+        # Show actual library.properties files to verify correct structure
+        echo "===== LIBRARY PROPERTIES FILES ====="
+        for prop in $(find . -name "library.properties"); do
+          echo "--- $prop ---"
+          cat "$prop"
+          echo ""
+        done
+        
+        # Verify JAR files in each library directory
+        echo "===== JAR FILES BY LIBRARY ====="
+        for lib in $(find . -maxdepth 1 -type d | grep -v "^\.$"); do
+          echo "Library: $lib"
+          find "$lib" -name "*.jar" | sort
+          echo ""
+        done
         
     - name: Set up virtual display for headless operation
       run: |
-        # Start a virtual X server for headless operation
+        # Start Xvfb 
         Xvfb :1 -screen 0 1024x768x24 &
+        sleep 2  # Give it time to initialize
         echo "DISPLAY=:1" >> $GITHUB_ENV
         
     - name: Run sketch as test before export
       run: |
         echo "Testing sketch compilation..."
-        xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_PATH --build
+        # Print all imports from the sketch for debugging
+        echo "Sketch imports:"
+        grep -r "import " $GITHUB_WORKSPACE/$SKETCH_PATH
+        
+        # Test compilation with detailed output
+        PROCESSING_LOG=true xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_PATH --build --verbose
         
     - name: Export binaries for macOS (Intel)
       run: |
