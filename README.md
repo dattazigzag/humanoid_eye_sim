@@ -4,7 +4,25 @@ A Processing-based application for real-time pixelation of media content (images
 
 ![ArtNet DMX Pixelator](https://via.placeholder.com/800x450)
 
+---
+
+## How does it work?
+
+### Understanding the requirement
+
+![alt text](<_assets/Pixel Processing algorithms.png>)
+
+### How is image data mapped from software to the physical matrix?
+
+![alt text](<_assets/Pixel Processing algorithms-2.png>)
+
+### How do we downsample an image texture?
+
+![alt text](<_assets/Pixel Processing algorithms-3.png>)
+
 ## Features
+
+![alt text](<_assets/Our software.png>)
 
 - **Dual-Channel Operation**: Process two separate media inputs simultaneously
 - **Multiple Input Sources**:
