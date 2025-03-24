@@ -14,7 +14,7 @@ A Processing application for real-time pixelation of media content (images, vide
 
 > Oct 2024
 
-During a project exploring future requirements for humanoid design, we investigated necessary affordances and interactions. We recognized that designers needed physical prototypes to experiment with various interaction patterns and communication outputs. [Using a readily availabel simple Arduino sketch](https://learn.adafruit.com/animating-multiple-led-backpacks?view=all) (we did not have time to make anything fancy), we created an early proof of concept—displaying basic eye movements on a monochrome LED matrix. This physical prototype helped shape our concept visualizations.
+During a project exploring future requirements for humanoid design, we investigated necessary affordances and interactions. We recognized that designers needed physical prototypes to experiment with various interaction patterns and communication outputs. [Using a readily available simple Arduino sketch](https://learn.adafruit.com/animating-multiple-led-backpacks?view=all) (we did not have time to make anything fancy), we created an early proof of concept—displaying basic eye movements on a monochrome LED matrix. This physical prototype helped shape our concept visualizations.
 
 > There were many other PoCs but we will use this as a reference for now.
 
@@ -22,7 +22,7 @@ While we lacked time initially, we recognized the future importance of bridging 
 
 > For example, Disney invests significant effort in creating custom "feature authoring" tools that allows designers and technologists to experiment with various elements like physical animations, sound effects, and light animations.
 
-Having previously used DMX512 and ArtNet to design interactive lighting fixtures for in-car environments and stage designs, I wondered if we could create something similar for a humanoid eye.
+Having previously used DMX512 and ArtNet to design interactive lighting fixtures for in-car environments and stage designs, I wondered if we could create something similar for humanoid--eyes.
 
 _What if we had software where our animators and visual designers could simply drop in a video file of an eye animation and instantly test it on the actual hardware?_
 
@@ -88,25 +88,26 @@ Well as good as Resolume is, it is expensive and I needed something a bit more t
 >
 > Left: Video Loop.
 >
-> Right: Graphical Textures from another application being sent over via Syphon and analysed and outoputted to ArtNet through by our software.
+> Right: Graphical textures from another application are sent via Syphon, analyzed (downsampled), and output to ArtNet through our software.
 
 <br>
 
 ![alt text](<_assets/2 syphon.jpg>)
 > Two different asynchronous sources.
 >
-> Left: Graphical Textures from another application being sent over via Syphon and analysed and outoputted to ArtNet through by our software.
+> Left: Graphical textures from another application are sent via Syphon, analyzed (downsampled), and output to ArtNet through our software.
 >
-> Right: Graphical Textures from another application being sent over via Syphon and analysed and outoputted to ArtNet through by our software.
+> Right: Graphical textures from another application are sent via Syphon, analyzed (downsampled), and output to ArtNet through our software.
 
 ---
 
-__A Note on [Syphon](https://syphon.github.io/)__ 
+__A Note on [Syphon](https://syphon.github.io/)__
+
 > Syphon is an open source Mac OS X technology that allows applications to share frames - full frame rate video or stills - with one another in realtime.
 
-This means, since our application can receive Syphon frames, designers can design interactive animations (say 👀 movements, trigerred by diff inputs) in a compeltely different sofware and send frames using Syphon and our software just does one thing evry well, pixelate and send the data to LED matrix.
+This means that since our application can receive Syphon frames, designers can create interactive animations (like 👀 movements triggered by different inputs) in any compatible software and send frames through Syphon. Our software then does one thing exceptionally well: pixelate and send the data to the LED matrix.
 
-This de-coupling allows this "module" / "middleware" to be flexible enough for various files and stream formats and thus it can be used in a different setup alllowing for quick prototyping.
+> This decoupling allows the module/middleware to remain flexible, supporting various file and stream formats that can be used in different setups for rapid prototyping.
 
 ---
 
