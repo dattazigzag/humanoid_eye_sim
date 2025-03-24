@@ -39,15 +39,25 @@ A Processing application for real-time pixelation of media content (images, vide
 ![alt text](<_assets/2 videos - synced.jpg>)
 > Two videos, loaded and are syncornized.
 
+<br>
+
 ![alt text](<_assets/1 syphon 1 video.jpg>)
 > Two different asynchronous sources.
+>
 > Left: Video Loop.
+>
 > Right: Graphical Textures from another application being sent over via Syphon and analysed and outoputted to ArtNet through by our software.
+
+<br>
 
 ![alt text](<_assets/2 syphon.jpg>)
 > Two different asynchronous sources.
+>
 > Left: Graphical Textures from another application being sent over via Syphon and analysed and outoputted to ArtNet through by our software.
+>
 > Right: Graphical Textures from another application being sent over via Syphon and analysed and outoputted to ArtNet through by our software.
+
+---
 
 __A Note on [Syphon](https://syphon.github.io/)__ 
 > Syphon is an open source Mac OS X technology that allows applications to share frames - full frame rate video or stills - with one another in realtime.
@@ -55,6 +65,8 @@ __A Note on [Syphon](https://syphon.github.io/)__
 This means, since our application can receive Syphon frames, designers can design interactive animations (say 👀 movements, trigerred by diff inputs) in a compeltely different sofware and send frames using Syphon and our software just does one thing evry well, pixelate and send the data to LED matrix.
 
 This de-coupling allows this "module" / "middleware" to be flexible enough for various files and stream formats and thus it can be used in a different setup alllowing for quick prototyping.
+
+---
 
 ## Features (Summary)
 
