@@ -67,7 +67,7 @@ jobs:
         
         # ArtNet library - custom setup for bildspur version
         echo "Installing ArtNet library..."
-        wget -q "https://github.com/cansik/artnet4j/releases/download/v0.6.1/ch.bildspur.artnet.zip"
+        wget -q "https://github.com/cansik/artnet4j/releases/download/0.6.2/artnet4j.zip"
         # Create proper directory structure for the library
         mkdir -p ch.bildspur.artnet
         unzip -q ch.bildspur.artnet.zip -d ch.bildspur.artnet
