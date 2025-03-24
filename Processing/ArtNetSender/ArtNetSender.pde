@@ -266,6 +266,7 @@ void renderCanvasContent() {
     rightContentSnapshot, 1);
 
   // CRITICAL FIX: Render zero-size images of videos to keep P3D video playback working
+  // ** More Info: https://github.com/processing/processing-video/issues/207
   if (enableP3D) {
     if (leftMediaHandler.isVideo && leftMediaHandler.loadedVideo != null) {
       image(leftMediaHandler.loadedVideo, 0, 0, 0, 0);
