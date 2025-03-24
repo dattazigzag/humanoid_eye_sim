@@ -97,8 +97,8 @@ This de-coupling allows this "module" / "middleware" to be flexible enough for v
 ## Installation
 
 1. Install [Processing](https://processing.org/download) - __Processing 4.x recommended for Intel X86 Architecture__
-  > As the [Syphon Lib](https://github.com/Syphon/Processing) for Processing has not been ported for ARM Architechture yet. But running a Processing with Intel Architecture will render the thing sover Rosetta, on an ARM M Series Macs. [Follow this thread](https://github.com/Syphon/Java/issues/7)
-2. Install the required libraries via Processing's Library Manager:
+  > As the [Syphon Lib](https://github.com/Syphon/Processing) for Processing has not been ported for ARM Architechture yet. But running a Processing with Intel Architecture will render the things over Rosetta, on any ARM M Series Macs. [Follow this thread](https://github.com/Syphon/Java/issues/7) for more details.
+2. Install the required libraries via Processing's Library Manager
    - Sketch > Import Library > Add Library
    - Search for and install: Video, Syphon, ArtNet, ControlP5, Drop
 3. Clone or download this repository
