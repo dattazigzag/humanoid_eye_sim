@@ -10,6 +10,34 @@ A Processing application for real-time pixelation of media content (images, vide
 
 ---
 
+## The inspiration and background
+
+![alt text](<_assets/Inspiration 1.png>)
+
+> Oct 2024
+
+During a project exploring future requirements for humanoid design, we investigated necessary affordances and interactions. We recognized that designers needed physical prototypes to experiment with various interaction patterns and communication outputs. [Using a readily availabel simple Arduino sketch](https://learn.adafruit.com/animating-multiple-led-backpacks?view=all) (we did not have time to make anything fancy), we created an early proof of concept—displaying basic eye movements on a monochrome LED matrix. This physical prototype helped shape our concept visualizations.
+
+> There were many other PoCs but we will use this as a reference for now.
+
+While we lacked time initially, we recognized the future importance of bridging the gap between designers working in familiar software and quickly prototyping physical mockups at their desks to see in relaity how those thigs may turn up, on the real hardware.
+
+> For example, Disney invests significant effort in creating custom "feature authoring" tools that allow designers and technologists to experiment with various elements like physical animations, sound effects, and light animations.
+
+Having previously used DMX512 and ArtNet to design interactive lighting fixtures for in-car environments and stage designs, I wondered if we could create something similar for a humanoid eye.
+
+_What if we had software where our animators and visual designers could simply drop in a video file of an eye animation and instantly test it on the actual hardware?_
+
+_Oh and what if you could share your little triggered animation from your known software to this platform, that way you don;t even ahve to leave your software suit ...
+
+> Those were some of the early questions I started with
+
+## So, does something like this exist?
+
+...
+
+---
+
 ## How does it work?
 
 ### Understanding the requirement
@@ -20,15 +48,15 @@ A Processing application for real-time pixelation of media content (images, vide
 
 ![alt text](<_assets/Pixel Processing algorithms-2.png>)
 
-### How do we downsample an image texture?
-
-![alt text](<_assets/Pixel Processing algorithms-3.png>)
-
-### About the hardware
+#### About the hardware
 
 ![HW](<_assets/Hardware ....png>)
 
 [More in details here](Arduino/README.md)
+
+### How do we downsample an image texture?
+
+![alt text](<_assets/Pixel Processing algorithms-3.png>)
 
 ---
 
