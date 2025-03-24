@@ -1,7 +1,7 @@
 name: ArtNetSender Build and Export
 
 on:
-  workflow_dispatch:  # Enables manual triggering from the GitHub UI
+  workflow_dispatch:
 
 jobs:
   build:
@@ -21,20 +21,13 @@ jobs:
         
     - name: Download and install Processing
       run: |
-        # Download Processing 4.3.4
         wget https://github.com/processing/processing4/releases/download/processing-1297-4.3.4/processing-4.3.4-linux-x64.tgz
-        # Extract the archive
         tar -xzf processing-4.3.4-linux-x64.tgz
-        # Make Processing executable
         chmod +x processing-4.3.4/processing-java
-        # Print version information
-        ./processing-4.3.4/processing-java --help
         
     - name: Setup Processing sketchbook
       run: |
-        # Create the sketchbook directory structure
         mkdir -p $HOME/sketchbook/libraries
-        # Set the sketchbook location as environment variable
         echo "PROCESSING_SKETCHBOOK=$HOME/sketchbook" >> $GITHUB_ENV
         
     - name: Install Processing libraries
@@ -45,11 +38,13 @@ jobs:
         
         # Drop library
         wget https://transfluxus.github.io/drop/download/Drop-1.zip
-        unzip -o Drop-1.zip -d $HOME/sketchbook/libraries/
+        mkdir -p $HOME/sketchbook/libraries/Drop
+        unzip -o Drop-1.zip -d $HOME/sketchbook/libraries/Drop/
         
-        # Artnet4j library
-        wget https://github.com/cansik/artnet4j/releases/download/0.6.2/artnet4j.zip
-        unzip -o artnet4j.zip -d $HOME/sketchbook/libraries/
+        # ArtNet library (Bildspur version, NOT the original artnet4j)
+        wget https://github.com/cansik/artnet4j/releases/download/v0.6.1/ch.bildspur.artnet.zip
+        mkdir -p $HOME/sketchbook/libraries/artnet
+        unzip -o ch.bildspur.artnet.zip -d $HOME/sketchbook/libraries/artnet/
         
         # Syphon library
         wget https://github.com/Syphon/Processing/releases/download/latest/Syphon.zip
@@ -57,22 +52,26 @@ jobs:
         
         # ControlP5 library
         wget https://github.com/sojamo/controlp5/releases/download/v2.2.5/controlP5-2.2.5.zip
-        unzip -o controlP5-2.2.5.zip -d $HOME/sketchbook/libraries/
+        mkdir -p $HOME/sketchbook/libraries/controlP5
+        unzip -o controlP5-2.2.5.zip -d $HOME/sketchbook/libraries/controlP5/
         
         # List installed libraries to verify
         echo "Installed libraries:"
-        find $HOME/sketchbook/libraries -maxdepth 2 -type d -not -path "*/\.*" | sort
+        find $HOME/sketchbook/libraries -maxdepth 3 -type d -not -path "*/\.*" | sort
         
     - name: Set up virtual display for headless operation
       run: |
-        # Start Xvfb virtual framebuffer (following the GitHub wiki guide)
         Xvfb :1 -screen 0 1024x768x24 &
-        # Set the DISPLAY environment variable
         echo "DISPLAY=:1" >> $GITHUB_ENV
+        
+    - name: Run sketch as test before export
+      run: |
+        # Try to run the sketch to check for library issues
+        echo "Testing sketch compilation..."
+        xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_PATH --build
         
     - name: Export binaries for all platforms
       run: |
-        # Create output directories
         mkdir -p $GITHUB_WORKSPACE/output
         
         # Export for macOS (Intel)
@@ -89,4 +88,3 @@ jobs:
     #   with:
     #     name: artnet-sender-macosx-intel
     #     path: ${{ github.workspace }}/output/macosx-intel
-      
