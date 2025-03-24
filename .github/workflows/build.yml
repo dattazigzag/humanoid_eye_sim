@@ -1,0 +1,97 @@
+name: Processing Build and Export
+
+on:
+  workflow_dispatch:  # Manual trigger option
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    env:
+      SKETCH_NAME: "your_sketch"  # Replace with your actual sketch name
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb libxrender1 libxtst6 libxi6
+        
+    - name: Download and install Processing
+      run: |
+        # Download Processing 4.3.4 from the specified URL
+        wget https://github.com/processing/processing4/releases/download/processing-1297-4.3.4/processing-4.3.4-linux-x64.tgz
+        # Extract the archive
+        tar -xzf processing-4.3.4-linux-x64.tgz
+        # Make Processing executable
+        chmod +x processing-4.3.4/processing-java
+        
+    - name: Setup Processing sketchbook
+      run: |
+        # Create the sketchbook directory structure
+        mkdir -p $HOME/sketchbook/libraries
+        # Set the sketchbook location as environment variable
+        echo "PROCESSING_SKETCHBOOK=$HOME/sketchbook" >> $GITHUB_ENV
+        
+    - name: Install Processing libraries
+      run: |
+        # Video library
+        wget https://github.com/processing/processing-video/releases/download/latest/video.zip
+        unzip -o video.zip -d $HOME/sketchbook/libraries/
+        
+        # Drop library
+        wget https://transfluxus.github.io/drop/download/Drop-1.zip
+        unzip -o Drop-1.zip -d $HOME/sketchbook/libraries/
+        
+        # Artnet4j library
+        wget https://github.com/cansik/artnet4j/releases/download/0.6.2/artnet4j.zip
+        unzip -o artnet4j.zip -d $HOME/sketchbook/libraries/
+        
+        # Syphon library
+        wget https://github.com/Syphon/Processing/releases/download/latest/Syphon.zip
+        unzip -o Syphon.zip -d $HOME/sketchbook/libraries/
+        
+        # ControlP5 library
+        wget https://github.com/sojamo/controlp5/releases/download/v2.2.5/controlP5-2.2.5.zip
+        unzip -o controlP5-2.2.5.zip -d $HOME/sketchbook/libraries/
+        
+        # List installed libraries to verify
+        echo "Installed libraries:"
+        find $HOME/sketchbook/libraries -maxdepth 2 -type d -not -path "*/\.*" | sort
+        
+    - name: Set up virtual display for headless operation
+      run: |
+        # Start Xvfb virtual framebuffer (following the GitHub wiki guide)
+        Xvfb :1 -screen 0 1024x768x24 &
+        # Set the DISPLAY environment variable
+        echo "DISPLAY=:1" >> $GITHUB_ENV
+        
+    - name: Export binaries for all platforms
+      run: |
+        # Export for Linux (64-bit)
+        echo "Exporting for Linux..."
+        xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_NAME --export --platform=linux --bits=64
+        
+        # Export for Windows (64-bit)
+        echo "Exporting for Windows..."
+        xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_NAME --export --platform=windows --bits=64
+        
+        # Export for macOS
+        echo "Exporting for macOS..."
+        xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_NAME --export --platform=macosx
+        
+    - name: List generated files
+      run: |
+        echo "Exported binaries:"
+        find $GITHUB_WORKSPACE/$SKETCH_NAME -type f -path "*/application.*" -o -name "*.exe" -o -name "*.app" | sort
+        
+    - name: Upload binaries as artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: processing-binaries
+        path: |
+          ${{ github.workspace }}/${{ env.SKETCH_NAME }}/application.*
+          ${{ github.workspace }}/${{ env.SKETCH_NAME }}/*.exe
+          ${{ github.workspace }}/${{ env.SKETCH_NAME }}/*.app
