@@ -21,7 +21,7 @@ jobs:
         
     - name: Download and install Processing
       run: |
-        wget https://github.com/processing/processing4/releases/download/processing-1297-4.3.4/processing-4.3.4-linux-x64.tgz
+        wget "https://github.com/processing/processing4/releases/download/processing-1297-4.3.4/processing-4.3.4-linux-x64.tgz"
         tar -xzf processing-4.3.4-linux-x64.tgz
         chmod +x processing-4.3.4/processing-java
         
@@ -33,25 +33,39 @@ jobs:
     - name: Install Processing libraries
       run: |
         # Video library
-        wget https://github.com/processing/processing-video/releases/download/latest/video.zip
+        wget "https://github.com/processing/processing-video/releases/download/latest/video.zip"
         unzip -o video.zip -d $HOME/sketchbook/libraries/
         
         # Drop library
-        wget https://transfluxus.github.io/drop/download/Drop-1.zip
+        wget "https://transfluxus.github.io/drop/download/Drop-1.zip"
         mkdir -p $HOME/sketchbook/libraries/Drop
         unzip -o Drop-1.zip -d $HOME/sketchbook/libraries/Drop/
         
-        # ArtNet library (Bildspur version, NOT the original artnet4j)
-        https://github.com/cansik/artnet4j/releases/download/0.6.2/artnet4j.zip
-        mkdir -p $HOME/sketchbook/libraries/artnet
-        unzip -o ch.bildspur.artnet.zip -d $HOME/sketchbook/libraries/artnet/
+        # ArtNet library - using the Processing-compatible version
+        echo "Downloading ArtNet library..."
+        # First try the Bildspur version that provides ch.bildspur.artnet package
+        wget "https://github.com/cansik/artnet4j/releases/download/v0.6.1/ch.bildspur.artnet.zip" || echo "Couldn't download Bildspur version, trying alternative"
+        
+        if [ -f "ch.bildspur.artnet.zip" ]; then
+          mkdir -p $HOME/sketchbook/libraries/artnet
+          unzip -o ch.bildspur.artnet.zip -d $HOME/sketchbook/libraries/artnet/
+        else
+          # Fallback to the original artnet4j and properly format it for Processing
+          wget "https://github.com/cansik/artnet4j/releases/download/0.6.2/artnet4j.zip"
+          mkdir -p $HOME/sketchbook/libraries/artnet/library
+          unzip -o artnet4j.zip -d $HOME/sketchbook/libraries/artnet/library/
+          # Create the library.properties file required by Processing
+          echo "name=ArtNet" > $HOME/sketchbook/libraries/artnet/library.properties
+          echo "category=Data" >> $HOME/sketchbook/libraries/artnet/library.properties
+          echo "authorList=cansik" >> $HOME/sketchbook/libraries/artnet/library.properties
+        fi
         
         # Syphon library
-        wget https://github.com/Syphon/Processing/releases/download/latest/Syphon.zip
+        wget "https://github.com/Syphon/Processing/releases/download/latest/Syphon.zip"
         unzip -o Syphon.zip -d $HOME/sketchbook/libraries/
         
         # ControlP5 library
-        wget https://github.com/sojamo/controlp5/releases/download/v2.2.5/controlP5-2.2.5.zip
+        wget "https://github.com/sojamo/controlp5/releases/download/v2.2.5/controlP5-2.2.5.zip"
         mkdir -p $HOME/sketchbook/libraries/controlP5
         unzip -o controlP5-2.2.5.zip -d $HOME/sketchbook/libraries/controlP5/
         
@@ -59,16 +73,24 @@ jobs:
         echo "Installed libraries:"
         find $HOME/sketchbook/libraries -maxdepth 3 -type d -not -path "*/\.*" | sort
         
+        # List JAR files to verify library contents
+        echo "Library JAR files:"
+        find $HOME/sketchbook/libraries -name "*.jar" | sort
+        
     - name: Set up virtual display for headless operation
       run: |
         Xvfb :1 -screen 0 1024x768x24 &
         echo "DISPLAY=:1" >> $GITHUB_ENV
         
-    - name: Run sketch as test before export
+    - name: Test sketch compilation
       run: |
-        # Try to run the sketch to check for library issues
         echo "Testing sketch compilation..."
-        xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_PATH --build
+        xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_PATH --build || {
+          echo "Compilation failed. Examining libraries..."
+          find $HOME/sketchbook/libraries -type f -name "*.jar" -exec jar tvf {} \; | grep -i "artnet\|ch/bildspur"
+          cat $GITHUB_WORKSPACE/$SKETCH_PATH/*.pde | grep -i "import.*artnet"
+          exit 1
+        }
         
     - name: Export binaries for all platforms
       run: |
