@@ -3,8 +3,6 @@
 A Processing application for real-time pixelation of media content (images, videos, and Syphon streams) with ArtNet DMX output capabilities. 
 > Designed to control 8x8 LED Matrix displays, primarily for humanoid eye animations, but also suitable for other 8x8 pixel mapping projects and visual effects creation.
 
-![alt text](<_assets/Screenshot 2025-03-24 at 11.16.21.png>)
-
 ![alt text](<_assets/2 videos - synced.jpg>)
 > The usb cable is only there for providing power to the microcontrollers. The DMX512 ArtNet data is sent over the network.
 
@@ -20,21 +18,37 @@ During a project exploring future requirements for humanoid design, we investiga
 
 > There were many other PoCs but we will use this as a reference for now.
 
-While we lacked time initially, we recognized the future importance of bridging the gap between designers working in familiar software and quickly prototyping physical mockups at their desks to see in relaity how those thigs may turn up, on the real hardware.
+While we lacked time initially, we recognized the future importance of bridging the gap between designers working in familiar software and quickly prototyping physical mockups at their desks to see in relaity how those things may turn up, on the real hardware.
 
-> For example, Disney invests significant effort in creating custom "feature authoring" tools that allow designers and technologists to experiment with various elements like physical animations, sound effects, and light animations.
+> For example, Disney invests significant effort in creating custom "feature authoring" tools that allows designers and technologists to experiment with various elements like physical animations, sound effects, and light animations.
 
 Having previously used DMX512 and ArtNet to design interactive lighting fixtures for in-car environments and stage designs, I wondered if we could create something similar for a humanoid eye.
 
 _What if we had software where our animators and visual designers could simply drop in a video file of an eye animation and instantly test it on the actual hardware?_
 
-_Oh and what if you could share your little triggered animation from your known software to this platform, that way you don;t even ahve to leave your software suit ...
+_Oh and what if you could share/stream your little "triggered animation" from your known software to this platform? That way you don't even have to leave your software suit_ ...
 
-> Those were some of the early questions I started with
+> Those were some of the early questions I started pondering upon and they stayed with me. So, I had to do somethig about it.
 
-## So, does something like this exist?
+## First things first, don't reinvent the wheel
 
-...
+So, I wondered if something like this already existed that I could use. Since I have extensive experience using [Resolume Arena](https://www.resolume.com/) to control LED screens and addressable LED strips, I quickly created a mock-up in Arena to test my hypothesis.
+
+![alt text](<_assets/exp with resolume.png>)
+
+> Circa Feb, 2019, Beijing - Testing content on a custom-resolution flexible LED matrix to evaluate material overlay and LED display quality. The image shows Resolume open for quick matrix display mapping and animation testing.
+
+<br>
+
+![alt text](<_assets/Resolume test.png>)
+
+> Circa, Feb 2025
+
+## Then reinvent the wheel 😉
+
+Well as good as Resolume is, it is expensive and I needed something a bit more tailored, and leaner - purpose built for my task and also, I just wanted to make it and solve a challenge
+
+![alt text](<_assets/Screenshot 2025-03-24 at 11.16.21.png>)
 
 ---
 
