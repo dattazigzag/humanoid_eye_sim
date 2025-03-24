@@ -10,7 +10,10 @@ WIP
 
 ![alt text](<../_assets/Current test setup - Block Diagram.png>)
 
-Waveshare esp32-s3 matrix with addresseable LED was used
+[Waveshare esp32-s3 matrix with addresseable LED was used](https://www.waveshare.com/wiki/ESP32-S3-Matrix)
+
+
+![alt text](../_assets/esp32-s3-matrix-5.jpg)
 
 ## Important bits for the test setup code
 
