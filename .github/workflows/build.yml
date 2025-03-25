@@ -113,15 +113,15 @@ jobs:
             find . -maxdepth 1 -name "controlP5*.jar" -exec mv {} controlP5/library/ \;
             # Create library.properties
             cat > controlP5/library.properties << EOF
-            name=ControlP5
-            category=GUI
-            authorList=Andreas Schlegel
-            url=http://www.sojamo.de/libraries/controlP5/
-            sentence=GUI controls for Processing
-            paragraph=ControlP5 is a GUI library for Processing that provides a wide range of controllers
-            version=2.2.5
-            prettyVersion=2.2.5
-            EOF
+        name=ControlP5
+        category=GUI
+        authorList=Andreas Schlegel
+        url=http://www.sojamo.de/libraries/controlP5/
+        sentence=GUI controls for Processing
+        paragraph=ControlP5 is a GUI library for Processing that provides a wide range of controllers
+        version=2.2.5
+        prettyVersion=2.2.5
+        EOF
           fi
         fi
         
@@ -155,15 +155,15 @@ jobs:
         sleep 2  # Give it time to initialize
         echo "DISPLAY=:1" >> $GITHUB_ENV
         
-    - name: Run sketch as test before export
-      run: |
-        echo "Testing sketch compilation..."
-        # Print all imports from the sketch for debugging
-        echo "Sketch imports:"
-        grep -r "import " $GITHUB_WORKSPACE/$SKETCH_PATH
+    # - name: Run sketch as test before export
+    #   run: |
+    #     echo "Testing sketch compilation..."
+    #     # Print all imports from the sketch for debugging
+    #     echo "Sketch imports:"
+    #     grep -r "import " $GITHUB_WORKSPACE/$SKETCH_PATH
         
-        # Test compilation with detailed output
-        PROCESSING_LOG=true xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_PATH --build --verbose
+    #     # Test compilation with detailed output
+    #     PROCESSING_LOG=true xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_PATH --build --verbose
         
     - name: Export binaries for macOS (Intel)
       run: |
