@@ -24,6 +24,7 @@ jobs:
         wget "https://github.com/processing/processing4/releases/download/processing-1297-4.3.4/processing-4.3.4-linux-x64.tgz"
         tar -xzf processing-4.3.4-linux-x64.tgz
         chmod +x processing-4.3.4/processing-java
+        ./processing-4.3.4/processing-java
         
     - name: Setup Processing sketchbook
       run: |
@@ -44,63 +45,54 @@ jobs:
         wget -q "https://github.com/processing/processing-video/releases/download/latest/video.zip"
         unzip -q video.zip
         
-#     - name: Install Drop library
-#       run: |
-#         cd $HOME/sketchbook/libraries
-#         echo "Installing Drop library..."
-#         wget -q "https://transfluxus.github.io/drop/download/Drop-1.zip"
-#         mkdir -p Drop
-#         unzip -q Drop-1.zip -d Drop
+    - name: Install Drop library
+      run: |
+        cd $HOME/sketchbook/libraries
+        echo "Installing Drop library..."
+        wget -q "https://transfluxus.github.io/drop/download/Drop-1.zip"
+        unzip -q Drop-1.zip -d Drop
+        unzip Drop-1.zip
+        ls -la
         
-#         # Fix library structure if needed
-#         if [ -d "Drop/Drop" ]; then
-#           mv Drop/Drop/* Drop/
-#           rmdir Drop/Drop 2>/dev/null || true
-#         fi
-        
-#         # Create library directory if it doesn't exist
-#         mkdir -p Drop/library
-        
-#         # Move JAR files to library directory if they exist at root
-#         find Drop -maxdepth 1 -name "*.jar" -exec mv {} Drop/library/ \; 2>/dev/null || true
-        
-#         # Create library.properties file
-#         cat > Drop/library.properties << EOF
-# name=Drop
-# category=Data
-# authorList=Ramin Soleymani
-# url=https://github.com/transfluxus/drop
-# sentence=Drag and Drop for Processing
-# paragraph=Library for drag and drop support
-# version=1.0
-# prettyVersion=1.0
-# EOF
-        
-#     - name: Install ArtNet library
-#       run: |
-#         cd $HOME/sketchbook/libraries
-#         echo "Installing ArtNet library..."
-#         wget -q "https://github.com/cansik/artnet4j/releases/download/0.6.2/artnet4j.zip"
-        
-#         # Create a proper Processing library structure for ArtNet
-#         mkdir -p "ch.bildspur.artnet/library"
-#         unzip -q artnet4j.zip 
-        
-#         # Move JAR files to the library folder
-#         mv artnet4j*.jar "ch.bildspur.artnet/library/" 2>/dev/null || true
-        
-#         # Create library.properties file
-#         cat > "ch.bildspur.artnet/library.properties" << EOF
-# name=ArtNet
-# category=Data
-# authorList=cansik
-# url=https://github.com/cansik/artnet4j
-# sentence=ArtNet DMX library for Processing
-# paragraph=Allows communication over the ArtNet protocol for DMX control
-# version=0.6.2
-# prettyVersion=0.6.2
-# EOF
-        
+    - name: Install ArtNet library
+      run: |
+        cd $HOME/sketchbook/libraries
+        echo "Installing ArtNet library..."
+        # Create the target directory
+        mkdir -p artnet4j
+        # Create a temporary directory for extraction
+        mkdir -p temp_artnet
+        wget -q "https://github.com/cansik/artnet4j/releases/download/0.6.2/artnet4j.zip"
+        unzip -q artnet4j.zip -d temp_artnet
+        ls -la
+        # Find the actual content by looking for library.properties file
+        library_dir=$(find temp_artnet -name "library.properties" -exec dirname {} \; | head -1)
+        # If we found the directory containing library.properties
+        if [ -n "$library_dir" ]; then
+          # Move all files from that directory to our target artnet4j directory
+          cp -r "$library_dir"/* artnet4j/
+          echo "Library files moved successfully to artnet4j directory"
+        else
+          echo "Could not find library.properties in the extracted files"
+          # Fall back to finding the JAR file
+          jar_path=$(find temp_artnet -name "*.jar" | head -1)
+          if [ -n "$jar_path" ]; then
+            jar_dir=$(dirname "$jar_path")
+            # Move all files from the directory containing the JAR
+            cp -r "$jar_dir"/* artnet4j/
+            echo "Located JAR file and moved library files"
+          else
+            echo "Could not locate library files, showing extracted content:"
+            find temp_artnet -type f | head -10
+          fi
+        fi
+        # Clean up the temporary directory
+        rm -rf temp_artnet
+        ls -la
+        cd artnet4j
+        ls -la
+        cd ..
+
 #     - name: Install Syphon library
 #       run: |
 #         cd $HOME/sketchbook/libraries
