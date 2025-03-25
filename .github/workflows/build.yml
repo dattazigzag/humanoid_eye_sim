@@ -44,97 +44,97 @@ jobs:
         wget -q "https://github.com/processing/processing-video/releases/download/latest/video.zip"
         unzip -q video.zip
         
-    - name: Install Drop library
-      run: |
-        cd $HOME/sketchbook/libraries
-        echo "Installing Drop library..."
-        wget -q "https://transfluxus.github.io/drop/download/Drop-1.zip"
-        mkdir -p Drop
-        unzip -q Drop-1.zip -d Drop
+#     - name: Install Drop library
+#       run: |
+#         cd $HOME/sketchbook/libraries
+#         echo "Installing Drop library..."
+#         wget -q "https://transfluxus.github.io/drop/download/Drop-1.zip"
+#         mkdir -p Drop
+#         unzip -q Drop-1.zip -d Drop
         
-        # Fix library structure if needed
-        if [ -d "Drop/Drop" ]; then
-          mv Drop/Drop/* Drop/
-          rmdir Drop/Drop 2>/dev/null || true
-        fi
+#         # Fix library structure if needed
+#         if [ -d "Drop/Drop" ]; then
+#           mv Drop/Drop/* Drop/
+#           rmdir Drop/Drop 2>/dev/null || true
+#         fi
         
-        # Create library directory if it doesn't exist
-        mkdir -p Drop/library
+#         # Create library directory if it doesn't exist
+#         mkdir -p Drop/library
         
-        # Move JAR files to library directory if they exist at root
-        find Drop -maxdepth 1 -name "*.jar" -exec mv {} Drop/library/ \; 2>/dev/null || true
+#         # Move JAR files to library directory if they exist at root
+#         find Drop -maxdepth 1 -name "*.jar" -exec mv {} Drop/library/ \; 2>/dev/null || true
         
-        # Create library.properties file
-        cat > Drop/library.properties << EOF
-name=Drop
-category=Data
-authorList=Ramin Soleymani
-url=https://github.com/transfluxus/drop
-sentence=Drag and Drop for Processing
-paragraph=Library for drag and drop support
-version=1.0
-prettyVersion=1.0
-EOF
+#         # Create library.properties file
+#         cat > Drop/library.properties << EOF
+# name=Drop
+# category=Data
+# authorList=Ramin Soleymani
+# url=https://github.com/transfluxus/drop
+# sentence=Drag and Drop for Processing
+# paragraph=Library for drag and drop support
+# version=1.0
+# prettyVersion=1.0
+# EOF
         
-    - name: Install ArtNet library
-      run: |
-        cd $HOME/sketchbook/libraries
-        echo "Installing ArtNet library..."
-        wget -q "https://github.com/cansik/artnet4j/releases/download/0.6.2/artnet4j.zip"
+#     - name: Install ArtNet library
+#       run: |
+#         cd $HOME/sketchbook/libraries
+#         echo "Installing ArtNet library..."
+#         wget -q "https://github.com/cansik/artnet4j/releases/download/0.6.2/artnet4j.zip"
         
-        # Create a proper Processing library structure for ArtNet
-        mkdir -p "ch.bildspur.artnet/library"
-        unzip -q artnet4j.zip 
+#         # Create a proper Processing library structure for ArtNet
+#         mkdir -p "ch.bildspur.artnet/library"
+#         unzip -q artnet4j.zip 
         
-        # Move JAR files to the library folder
-        mv artnet4j*.jar "ch.bildspur.artnet/library/" 2>/dev/null || true
+#         # Move JAR files to the library folder
+#         mv artnet4j*.jar "ch.bildspur.artnet/library/" 2>/dev/null || true
         
-        # Create library.properties file
-        cat > "ch.bildspur.artnet/library.properties" << EOF
-name=ArtNet
-category=Data
-authorList=cansik
-url=https://github.com/cansik/artnet4j
-sentence=ArtNet DMX library for Processing
-paragraph=Allows communication over the ArtNet protocol for DMX control
-version=0.6.2
-prettyVersion=0.6.2
-EOF
+#         # Create library.properties file
+#         cat > "ch.bildspur.artnet/library.properties" << EOF
+# name=ArtNet
+# category=Data
+# authorList=cansik
+# url=https://github.com/cansik/artnet4j
+# sentence=ArtNet DMX library for Processing
+# paragraph=Allows communication over the ArtNet protocol for DMX control
+# version=0.6.2
+# prettyVersion=0.6.2
+# EOF
         
-    - name: Install Syphon library
-      run: |
-        cd $HOME/sketchbook/libraries
-        echo "Installing Syphon library..."
-        wget -q "https://github.com/Syphon/Processing/releases/download/latest/Syphon.zip"
-        unzip -q Syphon.zip
+#     - name: Install Syphon library
+#       run: |
+#         cd $HOME/sketchbook/libraries
+#         echo "Installing Syphon library..."
+#         wget -q "https://github.com/Syphon/Processing/releases/download/latest/Syphon.zip"
+#         unzip -q Syphon.zip
         
-    - name: Install ControlP5 library
-      run: |
-        cd $HOME/sketchbook/libraries
-        echo "Installing ControlP5 library..."
-        wget -q "https://github.com/sojamo/controlp5/releases/download/v2.2.5/controlP5-2.2.5.zip"
-        mkdir -p controlP5
-        unzip -q controlP5-2.2.5.zip -d controlP5
+#     - name: Install ControlP5 library
+#       run: |
+#         cd $HOME/sketchbook/libraries
+#         echo "Installing ControlP5 library..."
+#         wget -q "https://github.com/sojamo/controlp5/releases/download/v2.2.5/controlP5-2.2.5.zip"
+#         mkdir -p controlP5
+#         unzip -q controlP5-2.2.5.zip -d controlP5
         
-        # Fix structure if needed
-        if [ -d "controlP5/controlP5-2.2.5" ]; then
-          mv controlP5/controlP5-2.2.5/* controlP5/
-          rmdir controlP5/controlP5-2.2.5 2>/dev/null || true
-        fi
+#         # Fix structure if needed
+#         if [ -d "controlP5/controlP5-2.2.5" ]; then
+#           mv controlP5/controlP5-2.2.5/* controlP5/
+#           rmdir controlP5/controlP5-2.2.5 2>/dev/null || true
+#         fi
         
-        # Create library.properties if it doesn't exist
-        if [ ! -f "controlP5/library.properties" ]; then
-          cat > controlP5/library.properties << EOF
-name=ControlP5
-category=GUI
-authorList=Andreas Schlegel
-url=http://www.sojamo.de/libraries/controlP5/
-sentence=GUI controls for Processing
-paragraph=ControlP5 is a GUI library for Processing that provides a wide range of controllers
-version=2.2.5
-prettyVersion=2.2.5
-EOF
-        fi
+#         # Create library.properties if it doesn't exist
+#         if [ ! -f "controlP5/library.properties" ]; then
+#           cat > controlP5/library.properties << EOF
+# name=ControlP5
+# category=GUI
+# authorList=Andreas Schlegel
+# url=http://www.sojamo.de/libraries/controlP5/
+# sentence=GUI controls for Processing
+# paragraph=ControlP5 is a GUI library for Processing that provides a wide range of controllers
+# version=2.2.5
+# prettyVersion=2.2.5
+# EOF
+#         fi
         
     - name: Verify library installation
       run: |
@@ -161,17 +161,17 @@ EOF
     #     # Test compilation with detailed output
     #     xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_PATH --build --verbose
         
-    - name: Export binaries for macOS (Intel)
-      run: |
-        mkdir -p $GITHUB_WORKSPACE/output
+    # - name: Export binaries for macOS (Intel)
+    #   run: |
+    #     mkdir -p $GITHUB_WORKSPACE/output
         
-        echo "Exporting for macOS (Intel)..."
-        xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_PATH --export --variant=macosx-x86_64 --output=$GITHUB_WORKSPACE/output/macosx-intel
+    #     echo "Exporting for macOS (Intel)..."
+    #     xvfb-run ./processing-4.3.4/processing-java --sketch=$GITHUB_WORKSPACE/$SKETCH_PATH --export --variant=macosx-x86_64 --output=$GITHUB_WORKSPACE/output/macosx-intel
         
-    - name: List exported files
-      run: |
-        echo "Exported binaries:"
-        find $GITHUB_WORKSPACE/output -type f -not -path "*/\.*" | sort
+    # - name: List exported files
+    #   run: |
+    #     echo "Exported binaries:"
+    #     find $GITHUB_WORKSPACE/output -type f -not -path "*/\.*" | sort
         
     # - name: Upload macOS Intel binary as artifact
     #   uses: actions/upload-artifact@v3
