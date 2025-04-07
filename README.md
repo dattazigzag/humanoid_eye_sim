@@ -115,19 +115,19 @@ This means that since our application can receive Syphon frames, designers can c
 
 No Problem... 😉 But Mac Only 😂
 
-Make Sure you have [Syphon Transmit](https://github.com/Syphon/Syphon-Transmit) installed for Adobe After Effects (Follow their instructions)
+Make sure you have [Syphon Transmit](https://github.com/Syphon/Syphon-Transmit) installed for Adobe After Effects (Follow their instructions)
 
-Make sure it's seelected 👇🏼
+Make sure it's selected 👇🏼
 
 ![alt text](image.png)
 
-Then create a composition of `320x320`
+Then, create a composition of `320x320`
 
 ![alt text](_assets/AE_comp.png)
 
 Do your magic 🪄 in AE ...
 
-On our middle warte side, in [config.json](Processing/ArtNetSender/config.json) change the server names ...
+On our middle ware side, in [config.json](Processing/ArtNetSender/config.json), change the server names ...
 
 > OLD config
 
@@ -151,7 +151,7 @@ On our middle warte side, in [config.json](Processing/ArtNetSender/config.json) 
 }
 ```
 
-The Syphon streams from AE appear as: `'After Effects:Selected Source'` where `After Effects:` is the __server source__ and the _value_(here: `Selected Source`) is the __server name__
+The Syphon streams from AE appear as: `'After Effects:Selected Source'` where `After Effects:` is the __server source__ and the _value_ (here: `Selected Source`) is the __server name__
 
 And then ...
 
