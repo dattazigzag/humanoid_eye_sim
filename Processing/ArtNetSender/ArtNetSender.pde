@@ -14,7 +14,7 @@ import java.net.InetAddress;
 // ControlP5 for UI controls
 import controlP5.*;
 
-// Syphon library for incoming texture
+// Syphon library for receiving franmes and PGraphics canvas
 // ** Mac Only - Processing 4 for Intel X86 Architecture
 // ** Till someone makes a syphon Lib for Apple silicon
 import codeanticode.syphon.*;
@@ -68,8 +68,10 @@ boolean leftSyphonEnabled = false;
 boolean rightSyphonEnabled = false;
 
 // Global syphon server names
-String leftSyphonServer = "LeftEye";
-String rightSyphonServer = "RightEye";
+//String leftSyphonServer = "LeftEye";
+//String rightSyphonServer = "RightEye";
+String leftSyphonServer = "Selected Source";
+String rightSyphonServer = "Selected Source";
 
 // Snapshot images for pixelation
 PImage leftContentSnapshot;

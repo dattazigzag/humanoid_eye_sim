@@ -1,0 +1,6 @@
+{
+    "syphon": {
+        "leftServer": "LeftEye",
+        "rightServer": "RightEye"
+    }
+}

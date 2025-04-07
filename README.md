@@ -111,9 +111,60 @@ This means that since our application can receive Syphon frames, designers can c
 
 ---
 
+## Want to stream from AfterEffects?
+
+No Problem... 😉 But Mac Only 😂
+
+Make Sure you have [Syphon Transmit](https://github.com/Syphon/Syphon-Transmit) installed for Adobe After Effects (Follow their instructions)
+
+Make sure it's seelected 👇🏼
+
+![alt text](image.png)
+
+Then create a composition of `320x320`
+
+![alt text](_assets/AE_comp.png)
+
+Do your magic 🪄 in AE ...
+
+On our middle warte side, in [config.json](Processing/ArtNetSender/config.json) change the server names ...
+
+> OLD config
+
+```json
+{
+    "syphon": {
+        "leftServer": "LeftEye",
+        "rightServer": "RightEye"
+    }
+}
+```
+
+> NEW config
+
+```json
+{
+    "syphon": {
+        "leftServer": "Selected Source",
+        "rightServer": "Selected Source"
+    }
+}
+```
+
+The Syphon streams from AE appear as: `'After Effects:Selected Source'` where `After Effects:` is the __server source__ and the _value_(here: `Selected Source`) is the __server name__
+
+And then ...
+
+![alt text](<_assets/AfterEffects-\>LED Matrix manager😉.gif>)
+
+> You can always press 'l' key on your keyboard, for our processing app, to verify the available syphon servers ...
+
+---
+
 ## Features (Summary)
 
-- **Multiple Input Sources**:
+- **Multiple Input Sources**
+
   - Load static images (JPG, PNG, GIF, TIFF, TGA)
     - Drag-and-drop media loading or use the GUI
   - Play videos (MP4, MOV, AVI, WEBM)
