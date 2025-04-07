@@ -1,3 +1,6 @@
+JSONObject config;
+String configFilePath = "config.json";
+
 // Global DMX data array
 byte[] dmxData = new byte[512];  // Standard DMX universe size
 
@@ -68,10 +71,16 @@ boolean leftSyphonEnabled = false;
 boolean rightSyphonEnabled = false;
 
 // Global syphon server names
-//String leftSyphonServer = "LeftEye";
-//String rightSyphonServer = "RightEye";
-String leftSyphonServer = "Selected Source";
-String rightSyphonServer = "Selected Source";
+String leftSyphonServer = "LeftEye";    // ** Note: Placeholder, wil be replaced from config file during loading ...
+String rightSyphonServer = "RightEye";  // ** Note: Placeholder, wil be replaced from config file during loading ...
+
+/*
+Note: AE syphon server name The Syphon streams from AE appear as: 'After Effects:Selected Source' where 'After Effects:'
+ is the server source and the value (here: 'Selected Source;) is the server name
+ 
+ String leftSyphonServer = "Selected Source";
+ String rightSyphonServer = "Selected Source";
+ */
 
 // Snapshot images for pixelation
 PImage leftContentSnapshot;
@@ -87,8 +96,45 @@ void settings() {
   }
 }
 
+
+boolean configLoaded(String _CONFIG_FILE_PATH) {
+  boolean configLoaded = false;
+  try {
+    config = loadJSONObject(_CONFIG_FILE_PATH);  // ** Note: config json object is global ...
+
+    // Extract the syphon server names
+    JSONObject syphon = config.getJSONObject("syphon");
+    leftSyphonServer = syphon.getString("leftServer");
+    rightSyphonServer = syphon.getString("rightServer");
+
+    println("\n[CONFIG] [SYPHON] Left server name: " + leftSyphonServer);
+    println("[CONFIG] [SYPHON] Right server name: " + rightSyphonServer + "\n");
+
+    if ((leftSyphonServer != null) && (rightSyphonServer != null)) {
+      println("[CONFIG] Config file loaded successfully\n");
+      configLoaded = true;
+    }else{
+      println("[CONFIG] Values are null ... Can't use them ... \n");
+      configLoaded = false;
+    }
+  }
+  catch (Exception e) {
+    // If any error occurs (including file not found)
+    println("\n[CONFIG] Error loading config file: " + e.getMessage() + "\n");
+    configLoaded = false;
+  }
+  return configLoaded;
+}
+
+
+
 void setup() {
   background(0);
+
+  if (!configLoaded(configFilePath)) {
+    println("[SYS] Exiting application...\n");
+    exit();
+  }
 
   // Important for P3D mode - set hint to improve 2D rendering performance where appropriate
   if (enableP3D) {
@@ -236,7 +282,7 @@ void processSyphonInputs() {
 
   // Process right Syphon input
   if (rightSyphonEnabled && rightSyphonClient != null) {
-      boolean newFrame = rightSyphonClient.newFrame();
+    boolean newFrame = rightSyphonClient.newFrame();
     if (newFrame) {
       try {
         rightSyphonCanvas.beginDraw();
