@@ -1,6 +1,6 @@
 {
     "syphon": {
-        "leftServer": "Selected Source",
-        "rightServer": "Selected Source"
+        "leftServer": "LeftEye",
+        "rightServer": "RightEye"
     }
 }
